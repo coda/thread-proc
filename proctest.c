@@ -27,7 +27,11 @@ int main(int argc, char** argv)
 		if(p == 0)
 		{
 			int rv = worker(rings, i);
-			if(rv == 0) {} else
+			if(rv == 0)
+			{
+				fprintf(stderr, "work %u done\n", i);
+			}
+			else
 			{
 				fprintf(stderr, "work %u failed\n", i);
 			}

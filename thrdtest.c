@@ -14,7 +14,7 @@ static void* routine(void* arg)
 	int rv = worker(rings, id);
 	if(rv == 0)
 	{
-//		fprintf(stderr, "work %u done\n", id);
+		fprintf(stderr, "work %u done\n", id);
 	}
 	else
 	{

@@ -53,8 +53,6 @@ void freerings(rnode* rings[])
 
 static int walknode(rnode **const rp, unsigned n)
 {
-	return 0;
-
 	rnode* r = *rp;
 	
 	if(r != NULL)
@@ -179,7 +177,7 @@ int worker(rnode* rings[], unsigned id)
 	{
 		unsigned op = rand_r(&rseed)
 			% (sizeof(operations) / sizeof(void*));
-		unsigned r = 0; // rand_r(&rseed) % nrings;
+		unsigned r = rand_r(&rseed) % nrings;
 		unsigned param = 1 << (rand_r(&rseed) % 7 + 1);
 
 //		fprintf(stderr, "work %u; op: %u; r: %u\n", id, op, r);
