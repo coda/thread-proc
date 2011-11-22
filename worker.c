@@ -4,6 +4,7 @@
 
 const unsigned nrings = 256;
 configuration cfg;
+static const unsigned stepfactor = 1;
 
 void fillconfig(unsigned argc, char** argv)
 {
@@ -57,7 +58,7 @@ static int walknode(rnode **const rp, unsigned n)
 	
 	if(r != NULL)
 	{
-		for(n /= 4; n > 0; n -= 1)
+		for(n /= stepfactor; n > 0; n -= 1)
 		{
 			*(unsigned*)((unsigned char*)r + sizeof(rnode)) = n;
 			r = r->next;
@@ -79,7 +80,7 @@ static int freenode(rnode **const rp, unsigned n)
 	{
 		if(r->next != r)
 		{
-			for(n /= 4; n > 0; n -= 1)
+			for(n /= stepfactor; n > 0; n -= 1)
 			{
 				r = r->next;
 			}

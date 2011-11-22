@@ -14,5 +14,5 @@ do
 	ttime=$({ time ./tt $(($niter * 1024 * 1024)) $nw; } 2>&1 \
 		| awk '/^real.*/ {print $2}')
 
-	printf $niter"M / %- 8u\tT: $ttime P: $ptime\n" $nw
+	printf $niter"M / %- 4u\tT: $ttime\tP: $ptime\n" $nw
 done
