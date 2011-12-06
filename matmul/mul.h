@@ -11,6 +11,7 @@ extern void matmul(
 	const unsigned n,
 	eltype rmtx[]);
 
-extern void matrand(eltype *const mtx, unsigned m, unsigned n);
+extern void matrand(unsigned id,
+	eltype *const mtx, const unsigned m, const unsigned n);
 
 #endif

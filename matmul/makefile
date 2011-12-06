@@ -1,4 +1,4 @@
-cc = clang -std=c99 -pedantic -Wall -Werror -flto -O4
+cc = clang -flto -std=c99 -pedantic -Wall -Werror -O4
 cflags = -D_POSIX_SOURCE -I .
 
 all: nmt nmp

@@ -1,9 +1,10 @@
 #include <./util.h>
 #include <./mul.h>
 
-#include <stdio.h>
+#include <stdlib.h>
 #include <stdarg.h>
 #include <string.h>
+#include <stdio.h>
 
 #include <errno.h>
 #include <unistd.h>

@@ -8,6 +8,6 @@ typedef struct
 } testconfig;
 
 extern void eprintf(const char *const, ...);
-extern void fillconfig(testconfig *const, unsigned, char **);
+extern testconfig fillconfig(const unsigned, const char *const *const);
 
 #endif

@@ -1,4 +1,8 @@
 #include <./mul.h>
+#include <./util.h>
+
+#include <stdio.h>
+#include <stdlib.h>
 
 void matmul(
 	const eltype *const araw,
@@ -12,6 +16,9 @@ void matmul(
 	const eltype (*const b)[n] = (const eltype (*const)[n])braw;
 	eltype (*const r)[n] = (eltype (*const)[n])rraw;
 
+// 	eprintf("matmul. l: %u; m: %u; n: %u; a: %p; b: %p; r: %p\n",
+// 		l, m, n, a, b, r); fflush(stderr);
+
 	for(unsigned i = 0; i < l; i += 1)
 	for(unsigned j = 0; j < n; j += 1)
 	{
@@ -21,5 +28,17 @@ void matmul(
 		{
 			r[i][j] += a[i][k] * b[k][j];
 		}
+	}
+}
+
+void matrand(unsigned seed,
+	eltype *const araw, const unsigned l, const unsigned m)
+{
+	eltype (*const a)[m] = (eltype (*const)[m])araw;
+
+	for(unsigned i = 0; i < l; i += 1)
+	for(unsigned j = 0; j < m; j += 1)
+	{
+		a[i][j] = 1.0 / rand_r(&seed);
 	}
 }

@@ -4,8 +4,10 @@
 #include <stdio.h>
 #include <stdint.h>
 #include <stdlib.h>
+#include <string.h>
 
 #include <pthread.h>
+#include <errno.h>
 
 // static struct
 // {
@@ -78,11 +80,44 @@ static void * multroutine(void * arg)
 	const unsigned l = ji.nrows;
 	const unsigned startrow = ji.startrow;
 
-	const eltype *const a = setup.a + startrow * sizeof(eltype) * m;
-	eltype *const r = setup.r + startrow * sizeof(eltype) * n;
+// 	const eltype *const a = setup.a + startrow * sizeof(eltype) * m;
+// 	eltype *const r = setup.r + startrow * sizeof(eltype) * n;
+//	MEGAFAIL: they are already have basetype of eltype
+
+	const eltype *const a = setup.a + startrow * m;
+	eltype *const r = setup.r + startrow * n;
+
+// 	eprintf("mult: %u; size: %u; workers: %u; l: %u; startrow: %u\n",
+// 		id, sz, nwrks, l, startrow);
+
 	matmul(a, setup.b, l, m, n, r);
 
-	eprintf("mult %u with l rows %u is done\n", id, l);
+	eprintf("mult %u with %u rows is done\n", id, l);
+
+	return NULL;
+}
+
+static void * randroutine(void * arg)
+{
+	const unsigned id = (uintptr_t)arg;
+	const unsigned sz = setup.cfg.size;
+	const unsigned nwrks = setup.cfg.nworkers;
+
+	const unsigned m = sz;
+	const unsigned n = sz;
+
+	const jobitem ji = ballance(id, nwrks, sz);
+	const unsigned l = ji.nrows;
+	const unsigned startrow = ji.startrow;
+
+
+	eltype *const a = setup.a + startrow * m;
+	eltype *const b = setup.b + startrow * n;
+
+	matrand(id, a, l, m);
+	matrand(id * 5, b, l, n); // because matricies are square.
+
+	eprintf("rand %u with %u rows is done\n", id, l);
 
 	return NULL;
 }
@@ -92,7 +127,36 @@ static eltype * matalloc(unsigned m, unsigned n)
 	return malloc(m * n * sizeof(eltype));
 }
 
-int main(int argc, char ** argv)
+static void runjobs(const unsigned count, void * (* routine)(void *))
+{
+	pthread_t threads[count];
+	unsigned ok = 1;
+	unsigned err;
+
+	for(unsigned i = 0; ok && i < count; i += 1)
+	{
+		err = pthread_create(threads + i, NULL, routine, (void *)i);
+		ok = err == 0;
+	}
+
+	if(ok) {} else
+	{
+		eprintf("err: %s. can't start %u jobs\n", strerror(err), count);
+	}
+
+	for(unsigned i = 0; ok && i < count; i += 1)
+	{
+		err = pthread_join(threads[i], NULL);
+		ok = err == 0;
+	}
+
+	if(ok) {} else
+	{
+		eprintf("err: %s. can't join %u jobs\n", strerror(err), count);
+	}
+}
+
+int main(int argc, const char *const *const argv)
 {
 	setup.cfg = fillconfig(argc, argv);	
 	const unsigned sz = setup.cfg.size;
@@ -104,18 +168,19 @@ int main(int argc, char ** argv)
 	void *const b = setup.b = matalloc(sz, sz);
 	void *const r = setup.r = matalloc(sz, sz);
 
-	if(a != NULL && b != NULL && c != NULL) {} else
+	if(a != NULL && b != NULL && r != NULL) {} else
 	{
 		eprintf("err: %s. can't allocate matricies\n", strerror(errno));
 		exit(1);
 	}
 
-	pthread_t threads[nw];
-	unsigned ok = 1;
-	unsigned i;
-	for(i = 0; ok && i < nw; i += 1)
-	{
-		ok = pthread_create(threads + i, NULL, routine, (void
+	eprintf("allocated. a: %p; b: %p; r: %p\n", a, b, r);
+
+	eprintf("randomization\n");
+	runjobs(nw, randroutine);
+
+	eprintf("multiplication\n");
+	runjobs(nw, multroutine);
 
 	return 0;
 }
