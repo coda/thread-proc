@@ -173,6 +173,10 @@ int main(int argc, const char *const *const argv)
 	printf("multiplication\n");
 	runjobs(nw, multroutine);
 
+	free(a);
+	free(b);
+	free(r);
+
 	printf("main DONE\n");
 
 	return 0;
