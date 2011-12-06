@@ -98,7 +98,7 @@ unsigned aligndown(const unsigned n, const unsigned blocksize)
 	return n - n % blocksize;
 }
 
-static const char *const fmtdetect()
+static const char * fmtdetect()
 {
 	switch(sizeof(pid_t))
 	{
