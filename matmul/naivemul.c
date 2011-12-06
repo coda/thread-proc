@@ -42,3 +42,5 @@ void matrand(unsigned seed,
 		a[i][j] = 1.0 / rand_r(&seed);
 	}
 }
+
+

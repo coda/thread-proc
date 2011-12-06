@@ -1,5 +1,5 @@
 cc = clang -flto -std=c99 -pedantic -Wall -Werror -O4
-cflags = -D_POSIX_SOURCE -I .
+cflags = -D_POSIX_C_SOURCE=200809 -I .
 
 all: nmt nmp
 
