@@ -18,46 +18,6 @@ static struct
 	testconfig cfg;
 } setup;
 
-// typedef struct
-// {
-// 	unsigned startrow;
-// 	unsigned nrows;
-// } jobitem;
-
-// static jobitem ballance(
-// 	const unsigned id,
-// 	const unsigned nwrks,
-// 	const unsigned nrows)
-// {
-// 	unsigned sr = 0;
-// 	unsigned l = 0;
-// 
-// 	if(nrows > nwrks)
-// 	{
-// 		const unsigned chunk = nrows / nwrks;
-// 
-// 		sr = chunk * id;
-// 		if(id < nwrks - 1) // not the last worker
-// 		{
-// 			l = chunk;
-// 		}
-// 		else // the last one takes the rest
-// 		{
-// 			l = nrows - sr;
-// 		}
-// 	}
-// 	else // one row per worker
-// 	{
-// 		if(id < nrows)
-// 		{
-// 			sr = id;
-// 			l = 1;
-// 		}
-// 	}
-// 
-// 	return (jobitem){ .startrow = sr, .nrows = l };
-// }
-
 static void * multroutine(void * arg)
 {
 	const unsigned id = (uintptr_t)arg;
@@ -173,9 +133,9 @@ int main(int argc, const char *const *const argv)
 	printf("multiplication\n");
 	runjobs(nw, multroutine);
 
-	free(a);
-	free(b);
-	free(r);
+// 	free(a);
+// 	free(b);
+// 	free(r);
 
 	printf("main DONE\n");
 
