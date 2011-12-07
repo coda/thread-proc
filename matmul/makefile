@@ -1,7 +1,7 @@
-cc = clang -flto -std=c99 -pedantic -Wall -Werror -O4
+cc = clang -std=c99 -pedantic -Wall -Werror -flto -O4
 cflags = -D_POSIX_C_SOURCE=200809 -I .
 
-all: nmt nmp
+all: mnt mnps
 
 clean:
 	rm *.o nmt nmp || true
@@ -11,10 +11,10 @@ clean:
 
 naive = naivemul.o util.o
 
-nmt: thrd.c $(naive)
-	$(cc) $(cflags) $^ -pthread -o $@
+mnt: naivethrd.c $(naive)
+	$(cc) $(cflags) $^ -pthread -lrt -o $@
 
-nmp: proc.c $(naive)
+mnps: naiveprocshm.c $(naive)
 	$(cc) $(cflags) $^ -lrt -o $@
 
 naivemul.o: mul.h naivemul.c

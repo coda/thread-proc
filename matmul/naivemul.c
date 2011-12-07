@@ -22,12 +22,20 @@ void matmul(
 	for(unsigned i = 0; i < l; i += 1)
 	for(unsigned j = 0; j < n; j += 1)
 	{
-		r[i][j] = 0;
+//		r[i][j] = 0;
+		double sum = 0;
 
 		for(unsigned k = 0; k < m; k += 1)
 		{
-			r[i][j] += a[i][k] * b[k][j];
+//			r[i][j] += a[i][k] * b[k][j];
+			sum += a[i][k] * b[k][j];
 		}
+
+//		volatile double *volatile ptr = &r[i][j];
+//		*ptr = sum;
+//		*ptr = sum;
+
+		r[i][j] = sum;
 	}
 }
 

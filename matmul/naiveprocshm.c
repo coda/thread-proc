@@ -79,6 +79,8 @@ static char * peekmap(
 		exit(-1);
 	}
 
+	eprintf("peekmap done\n");
+
 	return m;
 }
 
@@ -167,7 +169,7 @@ static void multroutine(const unsigned id)
 
 	eltype *const r = (eltype *const)(
 		peekmap(setup.fdr, rmapoff, rmaplen, PROT_WRITE) + rmapdiff);
-
+	
 	matmul(a, b, l, m, n, r);
 
 	printf("mult %u with %u rows is done\n", id, l);
