@@ -79,7 +79,7 @@ static char * peekmap(
 		exit(-1);
 	}
 
-	eprintf("peekmap done\n");
+//	eprintf("peekmap done\n");
 
 	return m;
 }
