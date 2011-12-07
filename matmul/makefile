@@ -1,7 +1,7 @@
 cc = clang -std=c99 -pedantic -Wall -Werror -flto -O4
 cflags = -D_POSIX_C_SOURCE=200809 -D_GNU_SOURCE -I .
 
-tests = mnt mnps mnp
+tests = mnt mnpm mnp
 
 all: $(tests)
 
@@ -16,7 +16,7 @@ naive = naivemul.o util.o
 mnt: naivethrd.c $(naive)
 	$(cc) $(cflags) $^ -pthread -o $@
 
-mnps: naiveprocshm.c $(naive)
+mnpm: naiveprocmmap.c $(naive)
 	$(cc) $(cflags) $^ -lrt -o $@
 
 mnp: naiveproc.c $(naive)
