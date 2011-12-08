@@ -9,6 +9,9 @@
 #include <pthread.h>
 #include <errno.h>
 
+#include <unistd.h>
+#include <sys/shm.h>
+
 static struct
 {
 	eltype * a;
@@ -71,8 +74,37 @@ static void * randroutine(void * arg)
 
 static eltype * matalloc(unsigned m, unsigned n)
 {
-	return malloc(m * n * sizeof(eltype));
+ 	return malloc(m * n * sizeof(eltype));
 }
+
+// static void * matalloc(const unsigned m, const unsigned n)
+// {
+// 	const long plen = sysconf(_SC_PAGESIZE);
+// 	if(plen > 0 && plen < (1 << 30)) {} else
+// 	{
+// 		eprintf("err: %s. can't get sane page size. plen: %ld\n",
+// 			strerror(errno), plen);
+// 		exit(1);
+// 	}
+// 
+// 	const unsigned len = align(m * n * sizeof(eltype), plen);
+// 
+// 	const int shmid = shmget(IPC_PRIVATE, len, SHM_R | SHM_W);
+// 	if(shmid > 0) {} else
+// 	{
+// 		eprintf("err: %s. can't get shm of len %u\n",
+// 			strerror(errno), len);
+// 		exit(1);
+// 	}
+// 
+// 	void *const ptr = shmat(shmid, NULL, 0);
+// 	if((intptr_t)ptr != -1) {} else
+// 	{
+// 		eprintf("err: %s. can't attach shm\n", strerror(errno));
+// 	}
+// 
+// 	return ptr;
+// }
 
 static void runjobs(const unsigned count, void * (* routine)(void *))
 {

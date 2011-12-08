@@ -107,29 +107,7 @@ static void multroutine(const unsigned id)
 	printf("mult %u with %u rows is done\n", id, l);
 }
 
-// static void * matalloc(const unsigned m, const unsigned n)
-// {
-// 	const long plen = sysconf(_SC_PAGESIZE);
-// 	if(plen > 0 && plen < (1 << 30)) {} else
-// 	{
-// 		eprintf("err: %s. can't get sane page size. plen: %ld\n",
-// 			strerror(errno), plen);
-// 		exit(1);
-// 	}
-// 
-// 	const unsigned len = align(m * n * sizeof(eltype), plen);
-// 	void * ptr = mmap(NULL, len, PROT_WRITE | PROT_READ,
-// 		MAP_ANONYMOUS | MAP_SHARED | MAP_UNINITIALIZED, -1, 0);
-// 	if(ptr != MAP_FAILED) {} else
-// 	{
-// 		eprintf("err: %s. can't allocate %u bytes\n", len);
-// 		exit(1);
-// 	}
-// 	
-// 	return ptr;
-// }
-
-static void * matalloc(const unsigned m, const unsigned n)
+static eltype * matalloc(const unsigned m, const unsigned n)
 {
 	const long plen = sysconf(_SC_PAGESIZE);
 	if(plen > 0 && plen < (1 << 30)) {} else
@@ -141,22 +119,49 @@ static void * matalloc(const unsigned m, const unsigned n)
 
 	const unsigned len = align(m * n * sizeof(eltype), plen);
 
-	const int shmid = shmget(IPC_PRIVATE, len, SHM_R | SHM_W);
-	if(shmid > 0) {} else
+	printf("mmaping for len %u\n", len);
+
+	void * ptr = mmap(NULL, len, PROT_WRITE | PROT_READ, 
+		MAP_ANONYMOUS | MAP_HUGETLB | MAP_SHARED,
+		0, 0);
+
+	if(ptr != MAP_FAILED) {} else
 	{
-		eprintf("err: %s. can't get shm of len %u\n",
-			strerror(errno), len);
+		eprintf("err: %s. can't allocate %u bytes\n", len);
 		exit(1);
 	}
-
-	void *const ptr = shmat(shmid, NULL, 0);
-	if((intptr_t)ptr != -1) {} else
-	{
-		eprintf("err: %s. can't attach shm\n", strerror(errno));
-	}
-
+	
 	return ptr;
 }
+
+// static void * matalloc(const unsigned m, const unsigned n)
+// {
+// 	const long plen = sysconf(_SC_PAGESIZE);
+// 	if(plen > 0 && plen < (1 << 30)) {} else
+// 	{
+// 		eprintf("err: %s. can't get sane page size. plen: %ld\n",
+// 			strerror(errno), plen);
+// 		exit(1);
+// 	}
+// 
+// 	const unsigned len = align(m * n * sizeof(eltype), plen);
+// 
+// 	const int shmid = shmget(IPC_PRIVATE, len, SHM_HUGETLB | SHM_R | SHM_W);
+// 	if(shmid > 0) {} else
+// 	{
+// 		eprintf("err: %s. can't get shm of len %u\n",
+// 			strerror(errno), len);
+// 		exit(1);
+// 	}
+// 
+// 	void *const ptr = shmat(shmid, NULL, 0);
+// 	if((intptr_t)ptr != -1) {} else
+// 	{
+// 		eprintf("err: %s. can't attach shm\n", strerror(errno));
+// 	}
+// 
+// 	return ptr;
+// }
 
 int main(int argc, const char *const *const argv)
 {
