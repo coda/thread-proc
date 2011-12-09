@@ -107,31 +107,36 @@ static void multroutine(const unsigned id)
 	printf("mult %u with %u rows is done\n", id, l);
 }
 
+// static eltype * matalloc(const unsigned m, const unsigned n)
+// {
+// 	const long plen = sysconf(_SC_PAGESIZE);
+// 	if(plen > 0 && plen < (1 << 30)) {} else
+// 	{
+// 		eprintf("err: %s. can't get sane page size. plen: %ld\n",
+// 			strerror(errno), plen);
+// 		exit(1);
+// 	}
+// 
+// 	const unsigned len = align(m * n * sizeof(eltype), plen);
+// 
+// 	printf("mmaping for len %u\n", len);
+// 
+// 	void * ptr = mmap(NULL, len, PROT_WRITE | PROT_READ, 
+// 		MAP_ANONYMOUS | MAP_HUGETLB | MAP_SHARED,
+// 		0, 0);
+// 
+// 	if(ptr != MAP_FAILED) {} else
+// 	{
+// 		eprintf("err: %s. can't allocate %u bytes\n", len);
+// 		exit(1);
+// 	}
+// 	
+// 	return ptr;
+// }
+
 static eltype * matalloc(const unsigned m, const unsigned n)
 {
-	const long plen = sysconf(_SC_PAGESIZE);
-	if(plen > 0 && plen < (1 << 30)) {} else
-	{
-		eprintf("err: %s. can't get sane page size. plen: %ld\n",
-			strerror(errno), plen);
-		exit(1);
-	}
-
-	const unsigned len = align(m * n * sizeof(eltype), plen);
-
-	printf("mmaping for len %u\n", len);
-
-	void * ptr = mmap(NULL, len, PROT_WRITE | PROT_READ, 
-		MAP_ANONYMOUS | MAP_HUGETLB | MAP_SHARED,
-		0, 0);
-
-	if(ptr != MAP_FAILED) {} else
-	{
-		eprintf("err: %s. can't allocate %u bytes\n", len);
-		exit(1);
-	}
-	
-	return ptr;
+	return peekmap(&setup.cfg, -1, m * n * sizeof(eltype), 0, PROT_WRITE);
 }
 
 // static void * matalloc(const unsigned m, const unsigned n)
