@@ -16,7 +16,7 @@ static struct
  	int fda;
  	int fdb;
  	int fdr;
-	unsigned pagelength;
+//	unsigned pagelength;
 
  	testconfig cfg;
 } setup;
@@ -65,30 +65,30 @@ static void runjobs(const unsigned count, void (* routine)(const unsigned))
 	}
 }
 
-static char * peekmap(
-	const int fd,
-	const unsigned offset,
-	const unsigned len,
-	const unsigned flag)
-{
-	void * m = mmap(NULL, len, PROT_READ | flag, MAP_SHARED, fd, offset);
-	if(m != MAP_FAILED) {} else
-	{
-		eprintf("err: %s. pid: %u. can't peek. len: %u; off: %u\n",
-			strerror(errno), getpid(), len, offset);
-		exit(-1);
-	}
-
-//	eprintf("peekmap done\n");
-
-	return m;
-}
+// static char * peekmap(
+// 	const int fd,
+// 	const unsigned offset,
+// 	const unsigned len,
+// 	const unsigned flag)
+// {
+// 	void * m = mmap(NULL, len, PROT_READ | flag, MAP_SHARED, fd, offset);
+// 	if(m != MAP_FAILED) {} else
+// 	{
+// 		eprintf("err: %s. pid: %u. can't peek. len: %u; off: %u\n",
+// 			strerror(errno), getpid(), len, offset);
+// 		exit(-1);
+// 	}
+// 
+// //	eprintf("peekmap done\n");
+// 
+// 	return m;
+// }
 
 static void randroutine(const unsigned id)
 {
 	const unsigned sz = setup.cfg.size;
 	const unsigned nwrks = setup.cfg.nworkers; 
-	const unsigned plen = setup.pagelength;
+	const unsigned plen = setup.cfg.pagelength;
 
 	const unsigned m = sz;
 	const unsigned n = sz;
@@ -116,14 +116,14 @@ static void randroutine(const unsigned id)
 // 	eprintf("pid %u. peeking a. off: %u; len: %u\n",
 // 		getpid(), amapoff, amaplen);
 
-	eltype *const a = (eltype *const)(
-		peekmap(setup.fda, amapoff, amaplen, PROT_WRITE) + amapdiff);
+	eltype *const a = (eltype *const)(peekmap(&setup.cfg,
+		setup.fda, amapoff, amaplen, PROT_WRITE) + amapdiff);
 
 // 	eprintf("pid %u. peeking b. off: %u; len: %u\n",
 // 		getpid(), bmapoff, bmaplen);
 
-	eltype *const b = (eltype *const)(
-		peekmap(setup.fdb, bmapoff, bmaplen, PROT_WRITE) + bmapdiff);
+	eltype *const b = (eltype *const)(peekmap(&setup.cfg,
+		setup.fdb, bmapoff, bmaplen, PROT_WRITE) + bmapdiff);
 
 	matrand(id, a, l, m);
 	matrand(id * 5, b, l, n);
@@ -135,7 +135,7 @@ static void multroutine(const unsigned id)
 {
 	const unsigned sz = setup.cfg.size;
 	const unsigned nwrks = setup.cfg.nworkers; 
-	const unsigned plen = setup.pagelength;
+	const unsigned plen = setup.cfg.pagelength;
 
 	const unsigned m = sz;
 	const unsigned n = sz;
@@ -161,14 +161,14 @@ static void multroutine(const unsigned id)
 	const unsigned rmapdiff = roff - rmapoff;
 	const unsigned rmaplen = align(rlen + rmapdiff, plen);
 
-	const eltype *const a = (const eltype *const)(
-		peekmap(setup.fda, amapoff, amaplen, 0) + amapdiff);
+	const eltype *const a = (const eltype *const)(peekmap(&setup.cfg,
+		setup.fda, amapoff, amaplen, 0) + amapdiff);
 
-	const eltype *const b = (const eltype *const)(
-		peekmap(setup.fdb, bmapoff, bmaplen, 0));
+	const eltype *const b = (const eltype *const)(peekmap(&setup.cfg,
+		setup.fdb, bmapoff, bmaplen, 0));
 
-	eltype *const r = (eltype *const)(
-		peekmap(setup.fdr, rmapoff, rmaplen, PROT_WRITE) + rmapdiff);
+	eltype *const r = (eltype *const)(peekmap(&setup.cfg,
+		setup.fdr, rmapoff, rmaplen, PROT_WRITE) + rmapdiff);
 	
 	matmul(a, b, l, m, n, r);
 
@@ -184,10 +184,10 @@ int main(int argc, const char *const *const argv)
 	printf("nworkers: %u; matrix size: %fMiB\n",
 		nw, (double)sz * sz * sizeof(eltype) / (double)(1 << 20));
 
-	setup.fda = makeshm(sz * sz * sizeof(eltype));
-	setup.fdb = makeshm(sz * sz * sizeof(eltype));
-	setup.fdr = makeshm(sz * sz * sizeof(eltype));
-	setup.pagelength = getpagelength();
+	setup.fda = makeshm(&setup.cfg, sz * sz * sizeof(eltype));
+	setup.fdb = makeshm(&setup.cfg, sz * sz * sizeof(eltype));
+	setup.fdr = makeshm(&setup.cfg, sz * sz * sizeof(eltype));
+//	setup.pagelength = getpagelength();
 
 	printf("shm allocated\n");
 

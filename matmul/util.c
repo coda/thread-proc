@@ -16,34 +16,46 @@
 void eprintf(const char *const format, ...)
 {
 	va_list al;
-	va_start (al, format);
+	va_start(al, format);
 	vfprintf(stderr, format, al);
 	va_end(al);
 }
 
-testconfig fillconfig(
-	const unsigned argc,
-	const char *const *const argv)
+void fail(const char *const format, ...)
 {
-	const long plen = sysconf(_SC_PAGESIZE);
-	if(plen != -1) {} else
+	const char *const errstr = strerror(errno);
+	va_list al;
+	va_start(al, format);
+	vfprintf(stderr, format, al);
+	va_end(al);
+	eprintf("; err: %s.\n", errstr);
+	exit(1);
+}
+
+static unsigned ispowerof2(unsigned x)
+{
+	return (x ^ (x - 1)) + 1 == x << 1;
+}
+
+testconfig fillconfig(const unsigned argc,const char *const *const argv)
+{
+	unsigned flags = 0;
+
+	const long sysplen = sysconf(_SC_PAGESIZE);
+	if(sysplen != -1) {} else
 	{
-		eprintf("err: %s. can't get pagesize\n", strerror(errno));
-		exit(1);
+		fail("can't get system pagesize");
 	}
 
-	const unsigned ellen = plen / sizeof(eltype);	
+	const unsigned elcount = sysplen / sizeof(eltype);	
 
-	printf("configuring with pagelength: %ld; elements per page: %u\n",
-		plen, ellen);
-		
-	unsigned sz = 2 * ellen;
+	unsigned sz = 2 * elcount;
 	unsigned nw = 64;
 
 	if(argc > 1)
 	{
 		const int i = atoi(argv[1]);
-		sz = i > 0 ? i * ellen : sz;
+		sz = i > 0 ? i * elcount : sz;
 	}
 
 	if(argc > 2)
@@ -52,7 +64,28 @@ testconfig fillconfig(
 		nw = i > 0 ? i : nw;
 	}
 
-	return (testconfig){ .size = sz, .nworkers = nw };	
+	unsigned plen = sysplen;
+	if(argc > 3)
+	{
+		const int i = atoi(argv[3]);	
+		if(i > 0 && ispowerof2(i) && i > sysplen)
+		{
+			plen = i;
+			flags |= cfghugetlb;
+		}
+		else
+		{
+			plen = sysplen;
+		}
+	}
+
+	eprintf("test with"
+		"pagelength: %ldKiB; flags: %u; elements per page: %u\n",
+		plen / 1024, flags, elcount);
+
+	return (testconfig){ 
+		.size = sz, .nworkers = nw,
+		.flags = flags, .pagelength = plen };	
 }
 
 jobitem ballance(const unsigned id, const unsigned nwrks, const unsigned nrows)
@@ -102,62 +135,124 @@ static const char * fmtdetect()
 {
 	switch(sizeof(pid_t))
 	{
-		case 1: return "rmf.shm-%hhx";
-		case 2: return "rmf.shm-%hx";
-		case 4: return "rmf.shm-%lx";
-		case 8: return "rmf.shm-%llx";
+		case 1: return "/shm-%hhx";
+		case 2: return "/shm-%hx";
+		case 4: return "/shm-%lx";
+		case 8: return "/shm-%llx";
 	}
 
-	return "rmf.shm-%x";
+	return "/shm-%x";
 }
 
-int makeshm(const unsigned size)
+static const char * htlbfmtdetect()
 {
-	char shmname[strlen("/rmf.shm-") + sizeof(pid_t) * 2 + 1];
-	sprintf(shmname, fmtdetect(), getpid());
-
-	int fd = shm_open(shmname, O_RDWR | O_CREAT, 0600);
-	if(fd >= 0) {} else
+	switch(sizeof(pid_t))
 	{
-		eprintf("err: %s. can't open shm: %s\n",
-			strerror(errno), shmname);
-		exit(1);
-	}
-	if(shm_unlink(shmname) == 0) {} else 
-	{
-		eprintf("err: %s. can't unlink name: %s\n",
-			strerror(errno), shmname);
-		exit(1);
+		case 1: return "/tmp/hugetlb/shm-%hhx";
+		case 2: return "/tmp/hugetlb/shm-%hx";
+		case 4: return "/tmp/hugetlb/shm-%lx";
+		case 8: return "/tmp/hugetlb/shm-%llx";
 	}
 
-	const long plen = sysconf(_SC_PAGESIZE);
-	if(plen > 0) {} else
+	return "/tmp/hugetlb/shm-%x";
+}
+
+int makeshm(const testconfig *const cfg, const unsigned size)
+{
+	int fd = -1;
+
+	if(!(cfg->flags & cfghugetlb))
 	{
-		eprintf("err: %s. can't get page length\n", strerror(errno));
-		exit(-1);
+		char shmname[strlen("/shm-") + sizeof(pid_t) * 2 + 1];
+		sprintf(shmname, fmtdetect(), getpid());
+
+		fd = shm_open(shmname, O_RDWR | O_CREAT, 0600);
+		if(fd >= 0) {} else
+		{
+			fail("can't open shm: %s", shmname);
+		}
+		if(shm_unlink(shmname) == 0) {} else 
+		{
+			fail("can't unlink shm: %s", shmname);
+		}
 	}
+	else
+	{
+		const unsigned namelen = strlen("/tmp/hugetlb/shm-")
+			+ sizeof(pid_t) * 2 + 1;
+		char htlbname[namelen];
+		sprintf(htlbname, htlbfmtdetect(), getpid());
+
+		fd = open(htlbname, O_RDWR | O_CREAT, 0600);
+		if(fd >= 0) {} else
+		{
+			fail("can't open huge tlb: %s", htlbname);
+		}
+		if(unlink(htlbname) == 0) {} else
+		{
+			fail("can't unlink huge tlb: %s", htlbname);
+		}
+	}
+
+	const long plen = cfg->pagelength;
+// 	if(plen > 0) {} else
+// 	{
+// 		eprintf("err: %s. can't get page length\n", strerror(errno));
+// 		exit(-1);
+// 	}
 
 	const unsigned shmlen = align(size, plen);
 
 	if(ftruncate(fd, shmlen) == 0) {} else
 	{
-		eprintf("err: %s. can't resize shm to %u(%u) bytes\n",
-			strerror(errno), shmlen, size);
-		exit(-1);
+		fail("can't resize shm to %u(%u) bytes", shmlen, size);
 	}
 
 	return fd;
 }
 
-unsigned getpagelength(void)
+// unsigned getpagelength(void)
+// {
+// 	long l = sysconf(_SC_PAGESIZE);
+// 	if(l > 0 && l < 0x7fffffff) {} else
+// 	{
+// 		eprintf("err: %s. can't get page length (%ld)\n",
+// 			strerror(errno), l);
+// 		exit(1);
+// 	}
+// 
+// 	return l;
+// }
+
+char * peekmap(
+	const testconfig *const cfg,
+	const int fd,
+	const unsigned offset,
+	const unsigned length,
+	const unsigned prot)
 {
-	long l = sysconf(_SC_PAGESIZE);
-	if(l > 0 && l < 0x7fffffff) {} else
+	const unsigned len = align(length, cfg->pagelength);
+	
+	unsigned flags = MAP_SHARED;
+
+	if(fd == -1)
 	{
-		eprintf("err: %s. can't get page length (%ld)\n",
-			strerror(errno), l);
-		exit(1);
+		flags |= MAP_ANONYMOUS;
+
+		if(cfg->flags & cfghugetlb)
+		{
+			flags |= MAP_HUGETLB;
+		}
 	}
 
-	return l;
+	void * m = mmap(NULL, len, PROT_READ | prot, MAP_SHARED, fd, offset);
+	if(m != MAP_FAILED) {} else
+	{
+		fail("can't mmap. pid: %u. can't peek. len: %u; off: %u\n",
+			getpid(), len, offset);
+	}
+
+//	eprintf("peekmap done\n");
+
+	return m;
 }
