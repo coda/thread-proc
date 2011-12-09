@@ -79,7 +79,7 @@ testconfig fillconfig(const unsigned argc,const char *const *const argv)
 		}
 	}
 
-	eprintf("test with"
+	eprintf("test with "
 		"pagelength: %ldKiB; flags: %u; elements per page: %u\n",
 		plen / 1024, flags, elcount);
 
@@ -245,11 +245,12 @@ char * peekmap(
 		}
 	}
 
-	void * m = mmap(NULL, len, PROT_READ | prot, MAP_SHARED, fd, offset);
+	void * m = mmap(NULL, len, PROT_READ | prot, flags, fd, offset);
 	if(m != MAP_FAILED) {} else
 	{
-		fail("can't mmap. pid: %u. can't peek. len: %u; off: %u\n",
-			getpid(), len, offset);
+		fail("peekmap. can't mmap. "
+			"pid: %u; len: %u; off: %u; pid: %d\n",
+			getpid(), len, offset, fd);
 	}
 
 //	eprintf("peekmap done\n");

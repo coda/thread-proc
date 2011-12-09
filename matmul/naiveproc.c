@@ -136,9 +136,9 @@ static void multroutine(const unsigned id)
 
 static eltype * matalloc(const unsigned m, const unsigned n)
 {
-	return (eltype *)peekmap(&setup.cfg, -1,
+	return (eltype *)peekmap(&setup.cfg, -1, 0,
 		m * n * sizeof(eltype),
-		0, PROT_WRITE);
+		PROT_WRITE);
 }
 
 // static void * matalloc(const unsigned m, const unsigned n)
