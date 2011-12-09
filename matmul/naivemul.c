@@ -7,14 +7,15 @@
 void matmul(
 	const eltype *const araw,
 	const eltype *const braw,
+	const unsigned baserow,
 	const unsigned l, // amount of work (nrows of a) is accounted here
 	const unsigned m,
 	const unsigned n,
 	eltype *const rraw)
 {
-	const eltype (*const a)[m] = (const eltype (*const)[m])araw;
+	const eltype (*const a)[m] = (const eltype (*const)[m])araw + baserow;
 	const eltype (*const b)[n] = (const eltype (*const)[n])braw;
-	eltype (*const r)[n] = (eltype (*const)[n])rraw;
+	eltype (*const r)[n] = (eltype (*const)[n])rraw + baserow;
 
 // 	eprintf("matmul. l: %u; m: %u; n: %u; a: %p; b: %p; r: %p\n",
 // 		l, m, n, a, b, r); fflush(stderr);
@@ -39,8 +40,12 @@ void matmul(
 	}
 }
 
-void matrand(unsigned seed,
-	eltype *const araw, const unsigned l, const unsigned m)
+void matrand(
+	unsigned seed,
+	eltype *const araw,
+	const unsigned baserow,
+	const unsigned l,
+	const unsigned m)
 {
 	eltype (*const a)[m] = (eltype (*const)[m])araw;
 
