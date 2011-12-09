@@ -79,7 +79,7 @@ testconfig fillconfig(const unsigned argc,const char *const *const argv)
 		}
 	}
 
-	eprintf("test with "
+	eprintf("config with "
 		"pagelength: %ldKiB; flags: %u; elements per page: %u\n",
 		plen / 1024, flags, elcount);
 

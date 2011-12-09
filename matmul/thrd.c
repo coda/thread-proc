@@ -32,16 +32,16 @@ static void * multroutine(void * arg)
 
 	const jobitem ji = ballance(id, nwrks, sz);
 	const unsigned l = ji.nrows;
-	const unsigned startrow = ji.startrow;
+//	const unsigned sr = ji.startrow;
 
-// 	const eltype *const a = setup.a + startrow * sizeof(eltype) * m;
-// 	eltype *const r = setup.r + startrow * sizeof(eltype) * n;
-//	MEGAFAIL: they are already have basetype of eltype
+	// the names should be transposed	
+	const unsigned sr = aligndown(ji.startrow, tilerows);
+	const unsigned baserow = ji.startrow - sr;
 
-	const eltype *const a = setup.a + startrow * m;
-	eltype *const r = setup.r + startrow * n;
+	const eltype *const a = setup.a + sr * m;
+	eltype *const r = setup.r + sr * n;
 
-	matmul(a, setup.b, l, m, n, r);
+	matmul(a, setup.b, baserow, l, m, n, r);
 
 	printf("mult %u with %u rows is done\n", id, l);
 
@@ -59,13 +59,17 @@ static void * randroutine(void * arg)
 
 	const jobitem ji = ballance(id, nwrks, sz);
 	const unsigned l = ji.nrows;
-	const unsigned startrow = ji.startrow;
+//	const unsigned startrow = ji.startrow;
 
-	eltype *const a = setup.a + startrow * m;
-	eltype *const b = setup.b + startrow * n;
+	const unsigned sr = aligndown(ji.startrow, tilerows);
+	const unsigned baserow = ji.startrow - sr;
 
-	matrand(id, a, l, m);
-	matrand(id * 5, b, l, n); // because matricies are square.
+	eltype *const a = setup.a + sr * m;
+	eltype *const b = setup.b + sr * n;
+
+	// because matricies are square, but not tiles
+	matrand(id, a, baserow, l, m, tilecols);
+	matrand(id * 5, b, baserow, l, n, tilerows); 
 
 	printf("rand %u with %u rows is done\n", id, l);
 

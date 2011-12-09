@@ -125,8 +125,8 @@ static void randroutine(const unsigned id)
 	eltype *const b = (eltype *const)(peekmap(&setup.cfg,
 		setup.fdb, bmapoff, bmaplen, PROT_WRITE) + bmapdiff);
 
-	matrand(id, a, l, m);
-	matrand(id * 5, b, l, n);
+	matrand(id, a, l, m, tilecols);
+	matrand(id * 5, b, l, n, tilerows);
 
 	printf("rand %03u with %u rows is done\n", id, l);
 }

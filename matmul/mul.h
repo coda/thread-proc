@@ -24,6 +24,7 @@ extern void matrand(
 	eltype *const mtx,
 	const unsigned baserow,
 	const unsigned m,
-	const unsigned n);
+	const unsigned n,
+	const unsigned tilecolumns);
 
 #endif

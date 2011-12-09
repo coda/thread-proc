@@ -45,9 +45,10 @@ void matrand(
 	eltype *const araw,
 	const unsigned baserow,
 	const unsigned l,
-	const unsigned m)
+	const unsigned m,
+	const unsigned tc)
 {
-	eltype (*const a)[m] = (eltype (*const)[m])araw;
+	eltype (*const a)[m] = (eltype (*const)[m])araw + baserow;
 
 	for(unsigned i = 0; i < l; i += 1)
 	for(unsigned j = 0; j < m; j += 1)
