@@ -94,7 +94,10 @@ typedef struct
 	unsigned nrows;
 } jobitem;
 
-static jobitem ballance(const unsigned id, const unsigned nwrks, const unsigned nrows)
+static jobitem ballance(
+	const unsigned id,
+	const unsigned nwrks,
+	const unsigned nrows)
 {
 	unsigned sr = 0;
 	unsigned l = 0;
@@ -139,7 +142,7 @@ static unsigned aligndown(const unsigned n, const unsigned blocksize)
 
 joblayout definejob(
 	const testconfig *const cfg, const unsigned id,
-	const unsigned m, const unsigned tc)
+	const unsigned l, const unsigned m, const unsigned tc)
 {
 	const unsigned tr = tilesize / (sizeof(eltype) * tc);
 
@@ -148,22 +151,28 @@ joblayout definejob(
 		fail("define job. m: %u isn't aligned on tc: %u", m, tc);
 	}
 
-	const jobitem ji = ballance(id, cfg->nworkers);
+	const jobitem ji = ballance(id, cfg->nworkers, l);
 
 	const unsigned nrows = ji.nrows;
-	const unsigned baserow = aligndown(ji.startrow, tr);
-	const unsigned startrow = ji.startrow - baserow;
+	const unsigned abr = aligndown(ji.startrow, tr); // absolute base row
+	const unsigned baserow = ji.startrow - abr;
 
-	const unsigned abo
-		= (baserow / tr) * sizeof(eltype[m / tc][tr][tc]);
+	const unsigned baseoffset = (abr / tr) * sizeof(eltype[m / tc][tr][tc]);
 
-	if(abo != baserow * m)
+	if(baseoffset != abr * m * sizeof(eltype))
 	{
-		fail("define job. absolute base offset isn't correct");
+		fail("define job. baseoffset computation isn't correct");
 	}
 
-	const unsigned mapoffset = aligndown(abo, cfg->pagelength);
-	const unsigned maplength = 
+	const unsigned mapoffset = aligndown(baseoffset, cfg->pagelength);
+
+	const unsigned ntilerows = align(baserow + nrows, tr) / tr;
+	const unsigned len = ntilerows * sizeof(eltype[m / tc][tr][tc]);
+	const unsigned maplength = align(len, cfg->pagelength);
+
+	return (joblayout){
+		.nrows = nrows, .baserow = baserow, .baseoffset = baseoffset,
+		.mapoffset = mapoffset, .maplength = maplength };
 }
 
 static const char * fmtdetect()

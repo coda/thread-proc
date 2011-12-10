@@ -83,8 +83,9 @@ void matrand(
 	for(unsigned i = baserow; i < baserow + l; i += 1)
 	for(unsigned j = 0; j < m; j += 1)
 	{
-//		a[i / tr][j / tc][i % tr][j % tc] = (double)rand_r(&seed);
-		a[i / tr][j / tc][i % tr][j % tc] = (double)i;
+		a[i / tr][j / tc][i % tr][j % tc]
+			= 1.0 / (double)((rand_r(&seed) >> 24) + 1);
+//		a[i / tr][j / tc][i % tr][j % tc] = (double)i;
 	}
 }
 

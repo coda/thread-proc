@@ -43,7 +43,8 @@ typedef struct
 	unsigned nrows;
 } joblayout;
 
-extern joblayout layjob(
-	const testconfig *const cfg, const unsigned id, const unsigned m);
+extern joblayout definejob(
+	const testconfig *const cfg, const unsigned id,
+	const unsigned l, const unsigned m, const unsigned tilecolumns);
 
 #endif

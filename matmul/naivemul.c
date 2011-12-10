@@ -44,8 +44,8 @@ void matrand(
 	for(unsigned i = 0; i < l; i += 1)
 	for(unsigned j = 0; j < m; j += 1)
 	{
-//		a[i][j] = (double)rand_r(&seed);
-		a[i][j] = (double)i;
+		a[i][j] = 1.0 / (double)((rand_r(&seed) >> 24) + 1);
+//		a[i][j] = (double)i;
 	}
 }
 
