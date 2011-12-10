@@ -175,8 +175,8 @@ int main(int argc, const char *const *const argv)
 	printf("allocated. a: %p; b: %p; r: %p\n", a, b, r);
 
 //	const unsigned tc = tilecols;
-	const unsigned tr = tilerows;
-	const unsigned m = sz;
+//	const unsigned tr = tilerows;
+//	const unsigned m = sz;
 
 	printf("randomization\n");
 	runjobs(nw, randroutine);
