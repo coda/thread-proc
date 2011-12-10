@@ -235,5 +235,21 @@ int main(int argc, const char *const *const argv)
 	printf("multiplication\n"); fflush(stdout); fflush(stderr);
 	runjobs(nw, multroutine);
 
+	const unsigned tr = tilerows;
+	const unsigned m = sz;
+
+	const eltype *const r = (void *)peekmap(&setup.cfg, setup.fdr, 0, m * m * sizeof(eltype), 0);
+
+	printf("some values\n");
+	for(unsigned i = 0; i < 8; i += 1)
+	{
+		printf("\t");
+		for(unsigned j = 0; j < 8; j += 1)
+		{
+			printf("%f ", (double)matat(r, m, i, j, tr));
+		}
+		printf("\n");
+	}
+
 	return 0;
 }
