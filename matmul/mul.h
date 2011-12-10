@@ -21,10 +21,17 @@ extern void matmul(
 
 extern void matrand(
 	unsigned id,
-	eltype *const mtx,
+	eltype mtx[],
 	const unsigned baserow,
 	const unsigned m,
 	const unsigned n,
+	const unsigned tilecolumns);
+
+extern eltype matat(
+	const eltype mtx[],
+	const unsigned m,
+	const unsigned i,
+	const unsigned j,
 	const unsigned tilecolumns);
 
 #endif

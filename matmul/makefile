@@ -26,7 +26,7 @@ mnp: proc.c $(naive)
 mtp: proc.c $(tile)
 	$(cc) $(cflags) $^ -o $@
 
-mnpf: naiveproconfs.c $(naive)
+mnpf: proconfs.c $(naive)
 	$(cc) $(cflags) $^ -lrt -o $@
 
 

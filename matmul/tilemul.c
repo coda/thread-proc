@@ -68,6 +68,14 @@ void matrand(
 	const unsigned m,
 	const unsigned tc)
 {
+	if(m % tc)
+	{
+		eprintf("won't randomize. m: %u is not aligned on tc: %u\n",
+			m, tc);
+
+		return;
+	}
+
 	const unsigned tr = tilesize / (sizeof(eltype) * tc);
 	eltype (*const a)[m / tc][tr][tc] =
 		(eltype (*const)[m / tc][tr][tc])araw;
@@ -75,6 +83,29 @@ void matrand(
 	for(unsigned i = baserow; i < baserow + l; i += 1)
 	for(unsigned j = 0; j < m; j += 1)
 	{
-		a[i / tr][j / tc][i % tr][j % tc] = 1.0 / rand_r(&seed);
+//		a[i / tr][j / tc][i % tr][j % tc] = (double)rand_r(&seed);
+		a[i / tr][j / tc][i % tr][j % tc] = (double)i;
 	}
+}
+
+eltype matat(
+	const eltype araw[],
+	const unsigned m,
+	const unsigned i,
+	const unsigned j,
+	const unsigned tc)
+{
+	if(m % tc)
+	{
+		eprintf("won't read element. m: %u is not aligned on tc: %u\n",
+			m, tc);
+
+		return 0;
+	}
+
+	const unsigned tr = tilesize / (sizeof(eltype) * tc);
+	const eltype (*const a)[m / tc][tr][tc]
+		= (const eltype (*const)[m / tc][tr][tc])araw;
+
+	return a[i / tr][j / tc][i % tr][j % tc];
 }
