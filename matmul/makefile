@@ -1,7 +1,7 @@
 cc = clang -std=c99 -pedantic -Wall -Werror -flto -O4
 cflags = -D_POSIX_C_SOURCE=200809 -D_GNU_SOURCE -I .
 
-tests = mnt mtt mnp mtp mnpf 
+tests = mnt mtt mnp mtp mnpf mtpf
 
 all: $(tests)
 
@@ -27,6 +27,9 @@ mtp: proc.c $(tile)
 	$(cc) $(cflags) $^ -o $@
 
 mnpf: proconfs.c $(naive)
+	$(cc) $(cflags) $^ -lrt -o $@
+
+mtpf: proconfs.c $(tile)
 	$(cc) $(cflags) $^ -lrt -o $@
 
 

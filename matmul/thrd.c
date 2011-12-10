@@ -172,8 +172,8 @@ int main(int argc, const char *const *const argv)
 	printf("allocated. a: %p; b: %p; r: %p\n", a, b, r);
 
 //	const unsigned tc = tilecols;
-	const unsigned tr = tilerows;
-	const unsigned m = sz;
+// 	const unsigned tr = tilerows;
+// 	const unsigned m = sz;
 
 	printf("randomization\n");
 	runjobs(nw, randroutine);
@@ -188,16 +188,16 @@ int main(int argc, const char *const *const argv)
 //	const unsigned tc = tilecols;
 //	const unsigned m = sz;
 
-	printf("some values\n");
-	for(unsigned i = 0; i < 8; i += 1)
-	{
-		printf("\t");
-		for(unsigned j = 0; j < 8; j += 1)
-		{
-			printf("%f ", (double)matat(r, m, i, j, tr));
-		}
-		printf("\n");
-	}
+// 	printf("some values\n");
+// 	for(unsigned i = 0; i < 8; i += 1)
+// 	{
+// 		printf("\t");
+// 		for(unsigned j = 0; j < 8; j += 1)
+// 		{
+// 			printf("%f ", (double)matat(r, m, i, j, tr));
+// 		}
+// 		printf("\n");
+// 	}
 
 	return 0;
 }

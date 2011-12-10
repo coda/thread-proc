@@ -69,23 +69,33 @@ static void runjobs(const unsigned count, void (* routine)(const unsigned))
 static void randroutine(const unsigned id)
 {
 	const unsigned sz = setup.cfg.size;
-	const unsigned nwrks = setup.cfg.nworkers; 
+//	const unsigned nwrks = setup.cfg.nworkers; 
 
+	const unsigned l = sz;
 	const unsigned m = sz;
 	const unsigned n = sz;
 
-	const jobitem ji = ballance(id, nwrks, sz);
-	const unsigned l = ji.nrows;
-//	const unsigned sr = ji.startrow;
+// 	const jobitem ji = ballance(id, nwrks, sz);
+// 	const unsigned l = ji.nrows;
+// //	const unsigned sr = ji.startrow;
+// 
+// 	const unsigned sr = aligndown(ji.startrow, tilerows);
+// 	const unsigned baserow = ji.startrow - sr;
+// 	
+// 	eltype *const a = setup.a + sr * m;
+// 	eltype *const b = setup.b + sr * n;
+// 
+// 	matrand(id, a, baserow, l, m, tilecols);
+// 	matrand(id * 5, b, baserow, l, n, tilerows);
 
-	const unsigned sr = aligndown(ji.startrow, tilerows);
-	const unsigned baserow = ji.startrow - sr;
-	
-	eltype *const a = setup.a + sr * m;
-	eltype *const b = setup.b + sr * n;
+	const joblayout al = definejob(&setup.cfg, id, l, m, tilecols);
+	const joblayout bl = definejob(&setup.cfg, id, m, n, tilerows);
 
-	matrand(id, a, baserow, l, m, tilecols);
-	matrand(id * 5, b, baserow, l, n, tilerows);
+	eltype *const a = setup.a + al.baseoffset / sizeof(eltype);
+	eltype *const b = setup.b + bl.baseoffset / sizeof(eltype);
+
+	matrand(id, a, al.baserow, al.nrows, m, tilecols);
+	matrand(id * 5, b, bl.baserow, bl.nrows, n, tilerows);
 
 	printf("rand %u with %u rows is done\n", id, l);
 }
@@ -93,22 +103,31 @@ static void randroutine(const unsigned id)
 static void multroutine(const unsigned id)
 {
 	const unsigned sz = setup.cfg.size;
-	const unsigned nwrks = setup.cfg.nworkers; 
+//	const unsigned nwrks = setup.cfg.nworkers; 
 
+	const unsigned l = sz;
 	const unsigned m = sz;
 	const unsigned n = sz;
 
-	const jobitem ji = ballance(id, nwrks, sz);
-	const unsigned l = ji.nrows;
-//	const unsigned sr = ji.startrow;
+// 	const jobitem ji = ballance(id, nwrks, sz);
+// 	const unsigned l = ji.nrows;
+// //	const unsigned sr = ji.startrow;
+// 
+// 	const unsigned sr = aligndown(ji.startrow, tilerows);
+// 	const unsigned baserow = ji.startrow - sr;
+// 	
+// 	const eltype *const a = setup.a + sr * m;
+// 	eltype *const r = setup.r + sr * n;
+// 
+// 	matmul(a, setup.b, baserow, l, m, n, r);
 
-	const unsigned sr = aligndown(ji.startrow, tilerows);
-	const unsigned baserow = ji.startrow - sr;
+	const joblayout al = definejob(&setup.cfg, id, l, m, tilecols);
+	const joblayout rl = definejob(&setup.cfg, id, l, n, tilerows);
+
+	const eltype *const a = setup.a + al.baseoffset / sizeof(eltype);
+	eltype *const r = setup.r + rl.baseoffset / sizeof(eltype);
 	
-	const eltype *const a = setup.a + sr * m;
-	eltype *const r = setup.r + sr * n;
-	
-	matmul(a, setup.b, baserow, l, m, n, r);
+	matmul(a, setup.b, al.baserow, al.nrows, m, n, r);
 
 	printf("mult %u with %u rows is done\n", id, l);
 }
