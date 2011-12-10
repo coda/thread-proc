@@ -47,22 +47,28 @@ static void runjobs(const unsigned count, void (* routine)(const unsigned))
 
 	if(ok) {} else
 	{
-		eprintf("err: %s. can't start %u jobs\n",
-			strerror(errno), count);
-		exit(1);
+		fail("can't start %u jobs", count);
 	}
 
+	// unsigned zerocount = 0;
 	for(unsigned i = 0; ok && i < count; i += 1)
 	{
-		ok = waitpid(procs[i], NULL, 0) == procs[i];
+		int status;
+		ok = waitpid(procs[i], &status, 0) == procs[i];
+// 		eprintf("job %u. exit: %u; signaled: %u; sig: %u, status: %u\n",
+// 			i,
+// 			WIFEXITED(status),
+// 			WIFSIGNALED(status),
+// 			WSTOPSIG(status),
+// 			WEXITSTATUS(status));
 	}
 
 	if(ok) {} else
 	{
-		eprintf("err: %s. can't join %u jobs\n",
-			strerror(errno), count);
-		exit(1);
+		fail("can't join %u jobs", count);
 	}
+
+//	eprintf("zero-exited jobs count: %u\n", zerocount);
 }
 
 // static char * peekmap(
@@ -129,8 +135,11 @@ static void randroutine(const unsigned id)
 // 	matrand(id, a, l, m, tilecols);
 // 	matrand(id * 5, b, l, n, tilerows);
 
-	const joblayout al = definejob(&setup.cfg, id, l, m, tilecols);
-	const joblayout bl = definejob(&setup.cfg, id, m, n, tilerows);
+	const unsigned tr = tilerows;
+	const unsigned tc = tilecols;
+
+	const joblayout al = definejob(&setup.cfg, id, l, m, tr, tc);
+	const joblayout bl = definejob(&setup.cfg, id, m, n, tc, tr);
 
 	const unsigned adiff = al.baseoffset - al.mapoffset;
 	eltype *const a = (eltype *const)(peekmap(&setup.cfg,
@@ -143,7 +152,8 @@ static void randroutine(const unsigned id)
 	matrand(id, a, al.baserow, al.nrows, m, tilecols);
 	matrand(id * 5, b, bl.baserow, bl.nrows, n, tilerows);
 
-	printf("rand %03u with %u rows is done\n", id, l);
+	printf("rand %03u with a:%u b:%u rows is done\n",
+		id, al.nrows, bl.nrows);
 }
 
 static void multroutine(const unsigned id)
@@ -177,7 +187,10 @@ static void multroutine(const unsigned id)
 // 	const unsigned rmapdiff = roff - rmapoff;
 // 	const unsigned rmaplen = align(rlen + rmapdiff, plen);
 
-	const joblayout al = definejob(&setup.cfg, id, l, m, tilecols);
+	const unsigned tr = tilerows;
+	const unsigned tc = tilecols;
+
+	const joblayout al = definejob(&setup.cfg, id, l, m, tr, tc);
 	const unsigned adiff = al.baseoffset - al.mapoffset;
 
 	const joblayout bl = definejob(
@@ -185,9 +198,9 @@ static void multroutine(const unsigned id)
 			.nworkers = 1,
 			.size = setup.cfg.size,
 			.pagelength = setup.cfg.pagelength },
-		0, m, n, tilerows);
+		0, m, n, tc, tr);
 
-	const joblayout rl = definejob(&setup.cfg, id, l, n, tilerows);
+	const joblayout rl = definejob(&setup.cfg, id, l, n, tr, tr);
 	const unsigned rdiff = rl.baseoffset - rl.mapoffset;
 
 // 	const eltype *const a = (const eltype *const)(peekmap(&setup.cfg,
@@ -208,9 +221,16 @@ static void multroutine(const unsigned id)
 	eltype *const r = (eltype *const)(peekmap(&setup.cfg,
 		setup.fdr, rl.mapoffset, rl.maplength, PROT_WRITE) + rdiff);
 	
-	matmul(a, b, al.baserow, al.nrows, m, n, r);
+	printf("mult %03u. a.mo: %u; a.ml: %u; a.bo: %u; a.br: %u\n",
+		id, al.mapoffset, al.maplength, al.baseoffset, al.baserow);
+	
+	printf("mult %03u. b.mo: %u; b.ml: %u; b.bo: %u; b.br: %u\n",
+		id, bl.mapoffset, bl.maplength, bl.baseoffset, bl.baserow);
 
-	printf("mult %u with %u rows is done\n", id, l);
+	matmul(a, b, al.baserow, al.nrows, m, n, r);
+//	printf("%p %p %u %u %u %u %p\n", a, b, al.baserow, al.nrows, m, n, r);
+
+	printf("mult %u with a:%u rows is done\n", id, al.nrows);
 }
 
 int main(int argc, const char *const *const argv)
@@ -241,10 +261,10 @@ int main(int argc, const char *const *const argv)
 	const eltype *const r = (void *)peekmap(&setup.cfg, setup.fdr, 0, m * m * sizeof(eltype), 0);
 
 	printf("some values\n");
-	for(unsigned i = 0; i < 8; i += 1)
+	for(unsigned i = 237; i < 237 + 8; i += 1)
 	{
 		printf("\t");
-		for(unsigned j = 0; j < 8; j += 1)
+		for(unsigned j = 15; j < 15 + 8; j += 1)
 		{
 			printf("%f ", (double)matat(r, m, i, j, tr));
 		}

@@ -44,8 +44,11 @@ static void * multroutine(void * arg)
 // 
 // 	matmul(a, setup.b, baserow, l, m, n, r);
 
-	const joblayout al = definejob(&setup.cfg, id, l, m, tilecols);
-	const joblayout rl = definejob(&setup.cfg, id, l, n, tilerows);
+	const unsigned tr = tilerows;
+	const unsigned tc = tilecols;
+
+	const joblayout al = definejob(&setup.cfg, id, l, m, tr, tc);
+	const joblayout rl = definejob(&setup.cfg, id, l, n, tr, tr);
 
 	const eltype *const a = setup.a + al.baseoffset / sizeof(eltype);
 	eltype *const r = setup.r + rl.baseoffset / sizeof(eltype);
@@ -81,8 +84,11 @@ static void * randroutine(void * arg)
 // 	matrand(id, a, baserow, l, m, tilecols);
 // 	matrand(id * 5, b, baserow, l, n, tilerows); 
 
-	const joblayout al = definejob(&setup.cfg, id, l, m, tilecols);
-	const joblayout bl = definejob(&setup.cfg, id, m, n, tilerows);
+	const unsigned tr = tilerows;
+	const unsigned tc = tilecols;
+
+	const joblayout al = definejob(&setup.cfg, id, l, m, tr, tc);
+	const joblayout bl = definejob(&setup.cfg, id, m, n, tc, tr);
 
 	eltype *const a = setup.a + al.baseoffset / sizeof(eltype);
 	eltype *const b = setup.b + bl.baseoffset / sizeof(eltype);
@@ -189,10 +195,10 @@ int main(int argc, const char *const *const argv)
 //	const unsigned m = sz;
 
 	printf("some values\n");
-	for(unsigned i = 0; i < 8; i += 1)
+	for(unsigned i = 237; i < 237 + 8; i += 1)
 	{
 		printf("\t");
-		for(unsigned j = 0; j < 8; j += 1)
+		for(unsigned j = 15; j < 15 + 8; j += 1)
 		{
 			printf("%f ", (double)matat(r, m, i, j, tr));
 		}

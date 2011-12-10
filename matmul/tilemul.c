@@ -18,11 +18,9 @@ void matmul(
 //	if(l % tr || m % tc || n % tr) l may not be aligned
 	if(m % tc || n % tr)
 	{
-		eprintf("won't  multiply. m: %u; n: %u are not aligned "
+		fail("won't  multiply. m: %u; n: %u are not aligned "
 			"on tc: %u; tr: %u\n",
 			l, m, n, tc, tr);
-
-		return;
 	}
 
 	const eltype (*const a)[m / tc][tr][tc]

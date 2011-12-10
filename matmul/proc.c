@@ -88,8 +88,11 @@ static void randroutine(const unsigned id)
 // 	matrand(id, a, baserow, l, m, tilecols);
 // 	matrand(id * 5, b, baserow, l, n, tilerows);
 
-	const joblayout al = definejob(&setup.cfg, id, l, m, tilecols);
-	const joblayout bl = definejob(&setup.cfg, id, m, n, tilerows);
+	const unsigned tr = tilerows;
+	const unsigned tc = tilecols;
+
+	const joblayout al = definejob(&setup.cfg, id, l, m, tr, tc);
+	const joblayout bl = definejob(&setup.cfg, id, m, n, tc, tr);
 
 	eltype *const a = setup.a + al.baseoffset / sizeof(eltype);
 	eltype *const b = setup.b + bl.baseoffset / sizeof(eltype);
@@ -121,8 +124,11 @@ static void multroutine(const unsigned id)
 // 
 // 	matmul(a, setup.b, baserow, l, m, n, r);
 
-	const joblayout al = definejob(&setup.cfg, id, l, m, tilecols);
-	const joblayout rl = definejob(&setup.cfg, id, l, n, tilerows);
+	const unsigned tr = tilerows;
+	const unsigned tc = tilecols;
+
+	const joblayout al = definejob(&setup.cfg, id, l, m, tr, tc);
+	const joblayout rl = definejob(&setup.cfg, id, l, n, tr, tr);
 
 	const eltype *const a = setup.a + al.baseoffset / sizeof(eltype);
 	eltype *const r = setup.r + rl.baseoffset / sizeof(eltype);

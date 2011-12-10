@@ -45,6 +45,7 @@ typedef struct
 
 extern joblayout definejob(
 	const testconfig *const cfg, const unsigned id,
-	const unsigned l, const unsigned m, const unsigned tilecolumns);
+	const unsigned l, const unsigned m,
+	const unsigned tr, const unsigned tc);
 
 #endif

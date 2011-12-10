@@ -142,9 +142,10 @@ static unsigned aligndown(const unsigned n, const unsigned blocksize)
 
 joblayout definejob(
 	const testconfig *const cfg, const unsigned id,
-	const unsigned l, const unsigned m, const unsigned tc)
+	const unsigned l, const unsigned m,
+	const unsigned tr, const unsigned tc)
 {
-	const unsigned tr = tilesize / (sizeof(eltype) * tc);
+//	const unsigned tr = tilesize / (sizeof(eltype) * tc);
 
 	if(m % tc)
 	{
@@ -165,10 +166,11 @@ joblayout definejob(
 	}
 
 	const unsigned mapoffset = aligndown(baseoffset, cfg->pagelength);
+	const unsigned odiff = baseoffset - mapoffset;
 
 	const unsigned ntilerows = align(baserow + nrows, tr) / tr;
 	const unsigned len = ntilerows * sizeof(eltype[m / tc][tr][tc]);
-	const unsigned maplength = align(len, cfg->pagelength);
+	const unsigned maplength = align(odiff + len, cfg->pagelength);
 
 	return (joblayout){
 		.nrows = nrows, .baserow = baserow, .baseoffset = baseoffset,
