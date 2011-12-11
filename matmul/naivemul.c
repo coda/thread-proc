@@ -54,6 +54,7 @@ eltype matat(
 	const unsigned m,
 	const unsigned i,
 	const unsigned j,
+	const unsigned tr,
 	const unsigned tc)
 {
 	return ((const eltype (*const)[m])araw)[i][j];

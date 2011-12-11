@@ -200,7 +200,7 @@ int main(int argc, const char *const *const argv)
 		printf("\t");
 		for(unsigned j = 15; j < 15 + 8; j += 1)
 		{
-			printf("%f ", (double)matat(r, m, i, j, tr));
+			printf("%f ", (double)matat(r, m, i, j, tr, tr));
 		}
 		printf("\n");
 	}

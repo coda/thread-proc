@@ -32,6 +32,7 @@ extern eltype matat(
 	const unsigned m,
 	const unsigned i,
 	const unsigned j,
-	const unsigned tilecolumns);
+	const unsigned tr,
+	const unsigned tc);
 
 #endif

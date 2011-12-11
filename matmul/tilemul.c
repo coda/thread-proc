@@ -92,6 +92,7 @@ eltype matat(
 	const unsigned m,
 	const unsigned i,
 	const unsigned j,
+	const unsigned tr,
 	const unsigned tc)
 {
 	if(m % tc)
@@ -102,7 +103,7 @@ eltype matat(
 		return 0;
 	}
 
-	const unsigned tr = tilesize / (sizeof(eltype) * tc);
+//	const unsigned tr = tilesize / (sizeof(eltype) * tc);
 	const eltype (*const a)[m / tc][tr][tc]
 		= (const eltype (*const)[m / tc][tr][tc])araw;
 
