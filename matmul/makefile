@@ -3,6 +3,9 @@ cflags = -D_POSIX_C_SOURCE=200809 -D_GNU_SOURCE -I .
 
 tests = mnt mtt mnp mtp mnpf mtpf
 
+naive = naivemul.o util.o
+tile = tilemul.o util.o
+
 all: $(tests)
 
 clean:
@@ -10,9 +13,6 @@ clean:
 
 %.o: %.c
 	$(cc) -c $(cflags) $< -o $@
-
-naive = naivemul.o util.o
-tile = tilemul.o util.o
 
 mnt: thrd.c $(naive)
 	$(cc) $(cflags) $^ -pthread -o $@

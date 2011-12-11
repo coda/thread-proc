@@ -21,19 +21,19 @@ struct elvector
 
 struct jobspec
 {
-	vector<eltype> * arrays;
+	elvector * arrays;
 	const testconfig * cfg;
 	unsigned id;
 
 	jobspec(
 		const unsigned i,
 		const testconfig *const c,
-		vector<eltype> *const a) : arrays(a), cfg(c), id(i) {};
+		elvector *const a) : arrays(a), cfg(c), id(i) {};
 };
 
 static void runjobs(
 	const testconfig *const cfg,
-	vector<eltype> *const arrays,
+	elvector *const arrays,
 	void * (*const routine)(void *))
 {
 	const unsigned count = cfg->nworkers;
@@ -48,7 +48,7 @@ static void runjobs(
 			threads + i,
 			NULL,
 			routine,
-			new jobspec(i, cfg, arrays)
+			(void *)(new jobspec(i, cfg, arrays))
 		);
 
 		ok = err == 0;
@@ -69,21 +69,30 @@ static void runjobs(
 	{
 		fail("can't join %u jobs", count);
 	}
+
+	delete threads;
 }
 
-static void expand(vector<eltype>& array, unsigned int n)
+static unsigned expand(
+	vector<eltype>& array, const unsigned id, const unsigned n)
 {
+	return id;
 }
 
-static void shrink(vector<eltype>& array, unsigned int n)
+static unsigned shrink(
+	vector<eltype>& array, const unsigned id, const unsigned n)
 {
+	return id;
 }
 
-static void exchange(vector<eltype>& array, unsigned int n)
+static unsigned exchange(
+	vector<eltype>& array, const unsigned id, const unsigned n)
 {
+	return id;
 }
 
-static void (*const functions[])(vector<eltype>&, unsigned int) =
+static unsigned (*const functions[])(
+	vector<eltype>&, const unsigned, const unsigned int) =
 {
 	expand,
 	shrink,
@@ -107,11 +116,16 @@ static void * routine(void * arg)
 
 //	tr1::uniform_int<unsigned> unif(0, 3);
 
+	unsigned id = j->id;
+
 	for(unsigned i = 0; i < iters; i += 1)
 	{
 //		cout << unif();
-		
-		rand_r(&seed);
+
+		const unsigned r = rand_r(&seed);
+		const unsigned fn = r % (sizeof(functions) / sizeof(void *));
+
+		id = functions[fn](j->arrays[id].v, id, r);
 	}
 
 	return NULL;
@@ -119,7 +133,7 @@ static void * routine(void * arg)
 
 static void process(const testconfig *const cfg)
 {
-	vector<eltype> *const arrays = new vector<eltype>[cfg->nworkers];
+	elvector *const arrays = new elvector[cfg->nworkers];
 
 	runjobs(cfg, arrays, routine);
 
