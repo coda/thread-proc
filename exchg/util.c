@@ -1,5 +1,4 @@
 #include <./util.h>
-#include <./mul.h>
 
 #include <stdlib.h>
 #include <stdarg.h>
@@ -47,15 +46,14 @@ testconfig fillconfig(const unsigned argc,const char *const *const argv)
 		fail("can't get system pagesize");
 	}
 
-	const unsigned elcount = sysplen / sizeof(eltype);	
-
-	unsigned sz = 2 * elcount;
+	const unsigned baseiter = 1024 * 1024;
+	unsigned ni = 2 * baseiter;
 	unsigned nw = 64;
 
 	if(argc > 1)
 	{
 		const int i = atoi(argv[1]);
-		sz = i > 0 ? i * elcount : sz;
+		ni = i > 0 ? i * baseiter : ni;
 	}
 
 	if(argc > 2)
@@ -79,53 +77,13 @@ testconfig fillconfig(const unsigned argc,const char *const *const argv)
 		}
 	}
 
-	eprintf("config with "
-		"pagelength: %ldKiB; flags: %u; elements per page: %u\n",
-		plen / 1024, flags, elcount);
+	eprintf("config with. pagelength: %ldKiB; flags: %u; niterations: %u; "
+		"nworkers: %u; iters/wrk: %u\n",
+		plen / 1024, flags, ni, nw, ni / nw);
 
 	return (testconfig){ 
-		.size = sz, .nworkers = nw,
+		.niterations = ni, .nworkers = nw,
 		.flags = flags, .pagelength = plen };	
-}
-
-typedef struct
-{
-	unsigned startrow;
-	unsigned nrows;
-} jobitem;
-
-static jobitem ballance(
-	const unsigned id,
-	const unsigned nwrks,
-	const unsigned nrows)
-{
-	unsigned sr = 0;
-	unsigned l = 0;
-
-	if(nrows > nwrks)
-	{
-		const unsigned chunk = nrows / nwrks;
-
-		sr = chunk * id;
-		if(id < nwrks - 1) // not the last worker
-		{
-			l = chunk;
-		}
-		else // the last one takes the rest
-		{
-			l = nrows - sr;
-		}
-	}
-	else // one row per worker
-	{
-		if(id < nrows)
-		{
-			sr = id;
-			l = 1;
-		}
-	}
-
-	return (jobitem){ .startrow = sr, .nrows = l };
 }
 
 static unsigned align(const unsigned n, const unsigned blocksize)
@@ -135,48 +93,11 @@ static unsigned align(const unsigned n, const unsigned blocksize)
 	return n + t;
 }
 
-static unsigned aligndown(const unsigned n, const unsigned blocksize)
-{
-	return n - n % blocksize;
-}
-
-joblayout definejob(
-	const testconfig *const cfg, const unsigned id,
-	const unsigned l, const unsigned m,
-	const unsigned tr, const unsigned tc)
-{
-//	const unsigned tr = tilesize / (sizeof(eltype) * tc);
-
-	if(m % tc)
-	{
-		fail("define job. m: %u isn't aligned on tc: %u", m, tc);
-	}
-
-	const jobitem ji = ballance(id, cfg->nworkers, l);
-
-	const unsigned nrows = ji.nrows;
-	const unsigned abr = aligndown(ji.startrow, tr); // absolute base row
-	const unsigned baserow = ji.startrow - abr;
-
-	const unsigned baseoffset = (abr / tr) * sizeof(eltype[m / tc][tr][tc]);
-
-	if(baseoffset != abr * m * sizeof(eltype))
-	{
-		fail("define job. baseoffset computation isn't correct");
-	}
-
-	const unsigned mapoffset = aligndown(baseoffset, cfg->pagelength);
-	const unsigned odiff = baseoffset - mapoffset;
-
-	const unsigned ntilerows = align(baserow + nrows, tr) / tr;
-	const unsigned len = ntilerows * sizeof(eltype[m / tc][tr][tc]);
-	const unsigned maplength = align(odiff + len, cfg->pagelength);
-
-	return (joblayout){
-		.nrows = nrows, .baserow = baserow, .baseoffset = baseoffset,
-		.mapoffset = mapoffset, .maplength = maplength };
-}
-
+// static unsigned aligndown(const unsigned n, const unsigned blocksize)
+// {
+// 	return n - n % blocksize;
+// }
+ 
 static const char * fmtdetect()
 {
 	switch(sizeof(pid_t))

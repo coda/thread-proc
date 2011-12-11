@@ -8,8 +8,8 @@ static void* routine(void* arg)
 {
 	unsigned id = (uintptr_t)arg;
 
-	rnode* rings[nrings];
-	bzero(rings, nrings * sizeof(rnode*));
+	rnodeline rings[nrings];
+	bzero(rings, nrings * sizeof(rnodeline));
 
 	int rv = worker(rings, id);
 	if(rv == 0)

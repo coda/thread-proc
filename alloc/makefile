@@ -4,15 +4,15 @@ cflags = -I .
 all: tt pt
 
 clean:
-	@ rm *.o tt pt || true
+	rm *.o tt pt || true
 
 %.o: %.c
-	@ $(cc) -c $(cflags) $< -o $@
+	$(cc) -c $(cflags) $< -o $@
 
 tt: thrdtest.c worker.o
-	@ $(cc) $(cflags) $^ -pthread -o $@
+	$(cc) $(cflags) $^ -pthread -o $@
 
 pt: proctest.c worker.o
-	@ $(cc) $(cflags) $^ -o $@
+	$(cc) $(cflags) $^ -o $@
 
 worker.o: worker.c worker.h

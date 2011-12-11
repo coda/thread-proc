@@ -16,8 +16,8 @@ int main(int argc, char** argv)
 
 	pid_t processes[cfg.nworkers];
 
-	rnode* rings[nrings];
-	bzero(rings, nrings * sizeof(rnode*));
+	rnodeline rings[nrings];
+	bzero(rings, nrings * sizeof(rnodeline));
 
 	unsigned ok = 1;
 	unsigned i;

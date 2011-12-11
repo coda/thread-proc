@@ -19,10 +19,10 @@ clean:
 %.o: %.cpp
 	$(cxx) -c $(cxxflags) $< -o $@
 
-et: thrd.cpp $(tile)
+et: thrd.cpp $(code)
 	$(cxx) $(cxxflags) $^ -pthread -o $@
 
-ep: proc.c $(naive)
+ep: proc.c $(code)
 	$(cc) $(cflags) $^ -o $@
 
-util.o: util.h util.c
+util.o: util.c util.h

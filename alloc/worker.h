@@ -7,8 +7,20 @@ typedef struct rnodetag
 	struct rnodetag* prev;
 } rnode;
 
-extern int worker(rnode* rings[], unsigned id);
-extern void freerings(rnode* rings[]);
+enum { cachelinelength = 64 };
+
+#define defpad(n, blk) ( \
+	(unsigned)(blk - n % blk) & ((unsigned)-1 + (n % blk == 0)) \
+)
+
+typedef struct
+{
+	rnode * r;
+	unsigned char padding[defpad(sizeof(rnode *), cachelinelength)];
+} rnodeline;
+
+extern int worker(rnodeline rings[], unsigned id);
+extern void freerings(rnodeline rings[]);
 
 typedef struct
 {

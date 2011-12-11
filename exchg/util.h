@@ -1,11 +1,11 @@
 #ifndef utilhincluded
 #define utilhincluded
 
-enum { cfghugetlb = 1 };
+enum { cfghugetlb = 1, cachelinelength = 64 };
 
 typedef struct
 {
-	unsigned size;
+	unsigned niterations;
 	unsigned nworkers;
 	unsigned flags;
 	int pagelength;
@@ -20,5 +20,9 @@ extern int makeshm(const testconfig *const cfg, const unsigned size);
 extern char * peekmap(const testconfig *const cfg,
 	const int fd, const unsigned len, const unsigned offset,
 	const unsigned flag);
+
+#define defpad(n, blk) ( \
+	(unsigned)(blk - n % blk) & ((unsigned)-1 + (n % blk == 0)) \
+)
 
 #endif

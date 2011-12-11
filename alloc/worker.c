@@ -43,12 +43,12 @@ static void freering(rnode* rn)
 	}
 }
 
-void freerings(rnode* rings[])
+void freerings(rnodeline rings[])
 {
 	for(unsigned i = 0; i < nrings; i += 1)
 	{
 //		fprintf(stderr, "freeing ring %u\n", i);
-		freering(rings[i]);
+		freering(rings[i].r);
 	}
 }
 
@@ -168,7 +168,7 @@ static int (*const operations[])(rnode**const, unsigned int) =
 	makenode
 };
 
-int worker(rnode* rings[], unsigned id)
+int worker(rnodeline rings[], unsigned id)
 {
 	unsigned int rseed = id;
 	unsigned step = cfg.niterations;
@@ -183,7 +183,7 @@ int worker(rnode* rings[], unsigned id)
 
 //		fprintf(stderr, "work %u; op: %u; r: %u\n", id, op, r);
 
-		rv = operations[op](rings + r, param);
+		rv = operations[op](&rings[r].r, param);
 		step -= 1;
 	}
 
