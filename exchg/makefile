@@ -11,7 +11,7 @@ code = util.o
 all: $(tests)
 
 clean:
-	rm $(code) $(tests) || true
+	rm *.o $(tests) || true
 
 %.o: %.c
 	$(cc) -c $(cflags) $< -o $@
