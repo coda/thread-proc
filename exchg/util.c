@@ -179,19 +179,6 @@ int makeshm(const testconfig *const cfg, const unsigned size)
 	return fd;
 }
 
-// unsigned getpagelength(void)
-// {
-// 	long l = sysconf(_SC_PAGESIZE);
-// 	if(l > 0 && l < 0x7fffffff) {} else
-// 	{
-// 		eprintf("err: %s. can't get page length (%ld)\n",
-// 			strerror(errno), l);
-// 		exit(1);
-// 	}
-// 
-// 	return l;
-// }
-
 char * peekmap(
 	const testconfig *const cfg,
 	const int fd,
@@ -221,9 +208,17 @@ char * peekmap(
 			getpid(), len, offset, fd);
 	}
 
-//	eprintf("peekmap done\n");
-
 	return m;
+}
+
+void dropmap(const testconfig *const cfg, void *const ptr, const unsigned len)
+{
+	const unsigned l = align(len, cfg->pagelength);
+	
+	if(munmap(ptr, l) == 0) {} else
+	{
+		fail("can't unap %p of len %u(%u)", ptr, len, l);
+	}
 }
 
 enum { piperead = 0, pipewrite = 1 };
@@ -241,12 +236,23 @@ void makerlink(int *const towrite, int *const toread)
 	*towrite = fds[pipewrite];
 }
 
+void uclose(const int fd)
+{
+	if(close(fd) == 0) {} else
+	{
+		fail("close failure on %d\n", fd);
+	}
+}
+
 void droprlink(const ringlink *const rl)
 {
-	if(close(rl->toread) || close(rl->towrite))
-	{
-		fail("close failure on %d or %d\n", rl->toread, rl->towrite);
-	}
+// 	if(close(rl->toread) || close(rl->towrite))
+// 	{
+// 		fail("close failure on %d or %d\n", rl->toread, rl->towrite);
+// 	}
+
+	uclose(rl->toread);
+	uclose(rl->towrite);
 }
 
 unsigned uiwrite(const int fd, const unsigned i)

@@ -250,7 +250,8 @@ int main(const int argc, const char *const *const argv)
 	}
 
 	printf("DONE. vector<eltype> size: %lu; elvector size %lu\n",
-		sizeof(vector<eltype>), sizeof(elvector));	
+		(unsigned long)sizeof(vector<eltype>),
+		(unsigned long)sizeof(elvector));	
 
 	return 0;
 }
@@ -275,7 +276,8 @@ static unsigned shrink(
 	vector<eltype>& array, ringlink *const rl,
 	const unsigned id, const unsigned r)
 {
-	const unsigned n = min((unsigned long)(r % workfactor), array.size());
+	const unsigned n = min(
+		(unsigned long)(r % workfactor), (unsigned long)array.size());
 
 	if(n > 0)
 	{

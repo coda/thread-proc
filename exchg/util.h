@@ -17,9 +17,15 @@ extern void fail(const char *const, ...);
 extern void eprintf(const char *const, ...);
 
 extern int makeshm(const testconfig *const cfg, const unsigned size);
-extern char * peekmap(const testconfig *const cfg,
-	const int fd, const unsigned len, const unsigned offset,
+
+extern char * peekmap(
+	const testconfig *const cfg,
+	const int fd,
+	const unsigned offset,
+	const unsigned len,
 	const unsigned flag);
+
+extern void dropmap(const testconfig *const cfg, void *const, const unsigned);
 
 #define defpad(n, blk) ( \
 	(unsigned)(blk - n % blk) & ((unsigned)-1 + (n % blk == 0)) \
@@ -41,5 +47,7 @@ extern unsigned uiwrite(const int fd, const unsigned i);
 extern unsigned uiread(const int fd);
 
 extern void ignoresigpipe(void);
+
+extern void uclose(const int fd);
 
 #endif
