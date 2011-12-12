@@ -6,7 +6,7 @@ cxxflags = $(cflags)
 
 
 tests = et ep
-code = util.o 
+code = util.o work.o
 
 all: $(tests)
 
@@ -26,3 +26,4 @@ ep: proc.c $(code)
 	$(cc) $(cflags) $^ -o $@
 
 util.o: util.c util.h
+work.o: work.c work.h

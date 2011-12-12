@@ -47,7 +47,7 @@ testconfig fillconfig(const unsigned argc,const char *const *const argv)
 		fail("can't get system pagesize");
 	}
 
-	const unsigned baseiter = 1024 * 1024;
+	const unsigned baseiter = 1024;
 	unsigned ni = 2 * baseiter;
 	unsigned nw = 64;
 

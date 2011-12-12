@@ -1,6 +1,6 @@
 extern "C" {
 #include <./util.h>
-#include <./xchng.h>
+#include <./work.h>
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -10,6 +10,7 @@ extern "C" {
 
 #include <vector>
 #include <iostream>
+#include <algorithm>
 
 #include <pthread.h>
 
@@ -79,11 +80,11 @@ static void * routine(void * arg)
 {
 	jobspec *const j = (jobspec *const)arg;
 
-	printf("unit %03u is here with. rd: %d; wr: %d; nit: %u; nwrk: %u\n",
-		j->id,
-		j->rl.toread, j->rl.towrite,
-		j->cfg->niterations, j->cfg->nworkers);
-
+// 	printf("unit %03u is here with. rd: %d; wr: %d; nit: %u; nwrk: %u\n",
+// 		j->id,
+// 		j->rl.toread, j->rl.towrite,
+// 		j->cfg->niterations, j->cfg->nworkers);
+ 
 	const unsigned iters = j->cfg->niterations / j->cfg->nworkers;
 
 //	cout << "routine " << j->id << " with " << iters << "iterations\n";
@@ -93,6 +94,7 @@ static void * routine(void * arg)
 //	tr1::uniform_int<unsigned> unif(0, 3);
 
 	unsigned id = j->id;
+	unsigned previd = id;
 
 	unsigned i = 0;
 
@@ -104,18 +106,19 @@ static void * routine(void * arg)
 			const unsigned r = rand_r(&seed);
 			const unsigned fn = r % nfunctions;
 
-			id = functions[fn](j->arrays[id].v, &j->rl, id, r);
+			previd = id;
+			id = functions[fn](j->arrays[previd].v, &j->rl, id, r);
 		}
 	}
-	catch(...)
+	catch(const exception e)
 	{
-		eprintf("exception\n"); fflush(stderr);
+		fail("unit %03u exception: %s\n", e.what());
 	}
 
 	uiwrite(j->rl.towrite, (unsigned)-1);
 
-// 	printf("routine %03u with %u iterations; %u exchanges done\n",
-// 		j->id, i, j->rl.nexchanges);
+ 	printf("unit %03u done. iters: %u; exchanges: %u\n",
+ 		j->id, i, j->rl.nexchanges);
 
 	delete j;
 
@@ -196,7 +199,7 @@ static void runjobs(
 		err = pthread_join(threads[i], NULL);
 		ok = err == 0;
 		
-		eprintf("thread %u joined\n", i); // fflush(stderr);
+//		eprintf("thread %u joined\n", i); // fflush(stderr);
 	}
 
 	if(ok) {} else
@@ -204,7 +207,7 @@ static void runjobs(
 		fail("can't join %u jobs", count);
 	}
 
-	printf("%u jobs joined\n", i); fflush(stdout);
+	printf("%u jobs joined\n", i); // fflush(stdout);
 
 	delete[] threads;
 }
@@ -214,6 +217,19 @@ static void process(const testconfig *const cfg)
 	elvector *const arrays = new elvector[cfg->nworkers];
 
 	runjobs(cfg, arrays, routine);
+
+	printf("some values\n");
+	for(unsigned i = 0; i < cfg->nworkers; i += 1)
+	{
+		if(arrays[i].v.size())
+		{
+			printf("\t%f\n", arrays[i].v[0]);
+		}
+		else
+		{
+			printf("\tEMPTY\n");
+		}
+	}
 
 	delete[] arrays;
 }
@@ -233,7 +249,7 @@ int main(const int argc, const char *const *const argv)
 		fail("something wrong. %s\n", e.what());
 	}
 
-	printf("done. vector<eltype> size: %lu; elvector size %lu\n",
+	printf("DONE. vector<eltype> size: %lu; elvector size %lu\n",
 		sizeof(vector<eltype>), sizeof(elvector));	
 
 	return 0;
@@ -241,15 +257,37 @@ int main(const int argc, const char *const *const argv)
 
 static unsigned expand(
 	vector<eltype>& array, ringlink *const rl,
-	const unsigned id, const unsigned n)
+	const unsigned id, const unsigned r)
 {
+	const unsigned n = r % workfactor;
+	unsigned seed = r;
+
+	array.reserve(array.size() + n);
+	for(unsigned i = 0; i < n; i += 1)
+	{
+		array.push_back(elrand(&seed));
+	}
+
 	return id;
 }
 
 static unsigned shrink(
 	vector<eltype>& array, ringlink *const rl,
-	const unsigned id, const unsigned n)
+	const unsigned id, const unsigned r)
 {
+	const unsigned n = min((unsigned long)(r % workfactor), array.size());
+
+	if(n > 0)
+	{
+// 		eprintf("will summ %u of %u els. starting: %p\n",
+// 			n, array.size(), &array[0]);
+
+		array.push_back(heapsum(&array[0], n));
+
+		vector<eltype>::iterator b = array.begin();
+		array.erase(b, b + n);
+	}
+
 	return id;
 }
 
