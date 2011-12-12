@@ -7,6 +7,7 @@
 
 #include <errno.h>
 #include <unistd.h>
+#include <signal.h>
 #include <fcntl.h>
 #include <sys/types.h>
 #include <sys/mman.h>
@@ -77,8 +78,8 @@ testconfig fillconfig(const unsigned argc,const char *const *const argv)
 		}
 	}
 
-	eprintf("config with. pagelength: %ldKiB; flags: %u; niterations: %u; "
-		"nworkers: %u; iters/wrk: %u\n",
+	printf("config with:\n\tpagelength: %uKiB\n\tflags: %u\n\t"
+		"niters: %u\n\tnwrks: %u\n\titers/wrk: %u\n",
 		plen / 1024, flags, ni, nw, ni / nw);
 
 	return (testconfig){ 
@@ -223,4 +224,77 @@ char * peekmap(
 //	eprintf("peekmap done\n");
 
 	return m;
+}
+
+enum { piperead = 0, pipewrite = 1 };
+
+void makerlink(int *const towrite, int *const toread)
+{
+	int fds[2];
+
+	if(pipe(fds) == 0) {} else
+	{
+		fail("can't make pipe");
+	}
+
+	*toread = fds[piperead];
+	*towrite = fds[pipewrite];
+}
+
+void droprlink(const ringlink *const rl)
+{
+	if(close(rl->toread) || close(rl->towrite))
+	{
+		fail("close failure on %d or %d\n", rl->toread, rl->towrite);
+	}
+}
+
+unsigned uiwrite(const int fd, const unsigned i)
+{
+	unsigned writable = 1;
+
+	int rv = write(fd, &i, sizeof(i));
+	if(rv == sizeof(i))
+	{
+	}
+	else if(errno == EPIPE)
+	{
+		writable = 0;
+	}
+	else
+	{
+// 		fail("can't write to %d; errno: %d; EPIPE: %d",
+// 			fd, errno, EPIPE);
+
+		fail("can't write to %d", fd);
+	}
+
+	return writable;
+}
+
+unsigned uiread(const int fd)
+{
+	unsigned i;
+
+	int rv = read(fd, &i, sizeof(i));
+	if(rv == sizeof(i)) {} else
+	{
+		fail("can't read from %d", fd);
+	}
+
+	return i;
+}
+
+void ignoresigpipe(void)
+{
+	struct sigaction sa;
+
+	sa.sa_handler = SIG_IGN;
+	sigemptyset(&sa.sa_mask);
+	sa.sa_flags = 0;
+
+	if(sigaction(SIGPIPE, &sa, NULL) == 0) {} else
+	{
+		fail("can't ignore SIGPIPE");
+	}
 }

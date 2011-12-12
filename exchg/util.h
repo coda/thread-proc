@@ -25,4 +25,21 @@ extern char * peekmap(const testconfig *const cfg,
 	(unsigned)(blk - n % blk) & ((unsigned)-1 + (n % blk == 0)) \
 )
 
+typedef struct
+{
+	int towrite;
+	int toread;
+//	unsigned listening;
+	unsigned nexchanges;
+	unsigned writable;
+} ringlink;
+
+extern void makerlink(int *const towrite, int *const toread);
+extern void droprlink(const ringlink *const rl);
+
+extern unsigned uiwrite(const int fd, const unsigned i);
+extern unsigned uiread(const int fd);
+
+extern void ignoresigpipe(void);
+
 #endif
