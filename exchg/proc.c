@@ -61,16 +61,12 @@ typedef struct
 static eltype * vectorexpand(vector *const v, const unsigned n,
 	const unsigned plen)
 {
-//	eprintf("expand rq for %u\n", n);
-
 	const unsigned need = v->offset + v->length + n * sizeof(eltype);
 
 	if(need < v->capacity)
 	{
 		return (eltype *)(v->ptr + v->offset + v->length);
 	}
-
-//	eprintf("will really expand\n");
 
 	void *const ptr
 		= mremap(v->ptr, v->capacity,
@@ -83,8 +79,6 @@ static eltype * vectorexpand(vector *const v, const unsigned n,
 
 	v->capacity = align(need, plen);
 	v->ptr = ptr;
-
-//	eprintf("expanded capacity: %u\n", v->capacity);
 
 	return (eltype *)(v->ptr + v->offset + v->length);
 }
@@ -172,12 +166,21 @@ static void routine(
 	unsigned seed = jid;
 	unsigned id = jid;
 	unsigned i;
+
+	actionfunction((*lastfn)) = NULL;
+
 	for(i = 0; id != (unsigned)-1 && i < iters; i += 1)
 	{
-			const unsigned r = rand_r(&seed);
-			const unsigned fn = r % nfunctions;
+		const unsigned r = rand_r(&seed);
+		const unsigned fn = r % nfunctions;
 
-			id = functions[fn](rl, &vectors[id].vf, &v, id, r);
+		lastfn = functions[fn];
+		id = lastfn(rl, &vectors[id].vf, &v, id, r);
+	}
+
+	if(lastfn != exchange)
+	{
+		vectorupload(&v, &vectors[id].vf);
 	}
 
 	uiwrite(rl->towrite, (unsigned)-1);
@@ -343,9 +346,9 @@ actionfunction(expand) // rl, vf, v, id, r
 	const unsigned n = r % workfactor;
 	unsigned seed = r;
 	
-	eprintf("before expand. cap: %u\n", v->capacity);
+//	eprintf("before expand. cap: %u\n", v->capacity);
 	eltype *const buf = vectorexpand(v, n, rl->cfg->pagelength);
-	eprintf("after expand. cap: %u\n", v->capacity);
+//	eprintf("after expand. cap: %u\n", v->capacity);
 
 	for(unsigned i = 0; i < n; i += 1)
 	{
@@ -364,46 +367,6 @@ actionfunction(shrink)
 
 actionfunction(exchange)
 {
-// 	rl->nexchanges += 1;
-// 	
-//  	vf->length = v->length;
-//  	vf->offset = v->offset;
-//  
-//  	if(pwrite(vf->fd, v->ptr, v->capacity, 0) == v->capacity) {} else
-//  	{
-//  		fail("can't write for exchange. fd: %d; capacity: %u",
-//  			vf->fd, v->capacity);
-//  	}
-// 
-// 	if(munmap(v->ptr, v->capacity) == 0) {} else
-// 	{
-// 		fail("can't unmap used vector: ptr: %x; capacity: %u",
-// 			v->ptr, v->capacity);
-// 	}
-// 
-// 	if(rl->writable)
-// 	{
-// 		rl->writable = uiwrite(rl->towrite, id);
-// 	}
-// 
-// 	const unsigned i = uiread(rl->toread);
-// 
-// 	if(i != (unsigned)-1)
-// 	{
-// 		// FIXME: quite a dirty hack
-// 		const vectorfile *const ivf = &((elvector *)vf - id + i)->vf; 
-// 		
-// 		v->offset = ivf->offset;
-// 		v->length = ivf->length;
-// 		v->capacity = flength(ivf->fd);
-// 
-// 		eprintf("vf: %u; capacity: %u\n", i, v->capacity);
-// 
-// 		v->ptr = peekmap(rl->cfg,
-// 			ivf->fd, 0, v->capacity, pmwrite | pmprivate);
-// 	}
-// 
-
 	rl->nexchanges += 1;
 
 	vectorupload(v, vf);
