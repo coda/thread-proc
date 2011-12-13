@@ -18,14 +18,17 @@ typedef struct
 
 static eltype vfelat(const vectorfile *const vf, const unsigned i)
 {
-	const unsigned elcnt = vf->length /sizeof(eltype);
+	const unsigned elcnt = vf->length / sizeof(eltype);
+
 	if(i < elcnt) {} else
 	{
-		fail("idx:%i is out of bounds", i);
+		fail("idx: %i is out of bounds", i);
 	}
 
+//	eprintf("vf->fd length: %u\n", flength(vf->fd));
+
 	off_t pos = vf->offset + i * sizeof(eltype);
-	if(lseek(vf->fd, SEEK_SET, pos) == pos) {} else
+	if(lseek(vf->fd, pos, SEEK_SET) == pos) {} else
 	{
 		fail("can't seek to pos:%u = off:%u + i:%u",
 			pos, vf->offset, i * sizeof(eltype));
@@ -58,7 +61,7 @@ typedef struct
 static eltype * vectorexpand(vector *const v, const unsigned n,
 	const unsigned plen)
 {
-	eprintf("expand rq for %u\n", n);
+//	eprintf("expand rq for %u\n", n);
 
 	const unsigned need = v->offset + v->length + n * sizeof(eltype);
 
@@ -67,7 +70,7 @@ static eltype * vectorexpand(vector *const v, const unsigned n,
 		return (eltype *)(v->ptr + v->offset + v->length);
 	}
 
-	eprintf("will really expand\n");
+//	eprintf("will really expand\n");
 
 	void *const ptr
 		= mremap(v->ptr, v->capacity,
@@ -81,9 +84,47 @@ static eltype * vectorexpand(vector *const v, const unsigned n,
 	v->capacity = align(need, plen);
 	v->ptr = ptr;
 
-	eprintf("expanded capacity: %u\n", v->capacity);
+//	eprintf("expanded capacity: %u\n", v->capacity);
 
 	return (eltype *)(v->ptr + v->offset + v->length);
+}
+
+static void vectorupload(const vector *const v, vectorfile *const vf)
+{
+	vf->offset = v->offset;
+	vf->length = v->length;
+
+	if(pwrite(vf->fd, v->ptr, v->capacity, 0) == v->capacity) {} else
+	{
+		fail("uploading. can't write old data");
+	}
+}
+
+static void vectordownload(const vectorfile *const vf, vector *const v)
+{
+	const unsigned len = flength(vf->fd);
+
+	if(len <= v->capacity) {} else
+	{
+		void *const ptr
+			= mremap(v->ptr, v->capacity, len, MREMAP_MAYMOVE);
+
+		if(ptr != MAP_FAILED) {} else
+		{
+			fail("reloading. can't remap vector");
+		}
+
+		v->ptr = ptr;
+		v->capacity = len;
+	}
+
+	v->offset = vf->offset;
+	v->length = vf->length;
+
+	if(pread(vf->fd, v->ptr, len, 0) == len) {} else
+	{
+		fail("downloading. can't download vector");
+	}
 }
 
 #define actionfunction(fname) unsigned fname \
@@ -274,8 +315,8 @@ int main(const int argc, const char *const *const argv)
 
 	for(unsigned i = 0; i < cfg.nworkers; i += 1)
 	{
-		const unsigned len = vectors[i].vf.length;
-		if(vectors[i].vf.length)
+		const unsigned len = vectors[i].vf.length / sizeof(eltype);
+		if(len)
 		{
 			printf("\t%f\t%u of %u\n",
 				(double)vfelat(&vectors[i].vf, len / 2),
@@ -325,14 +366,14 @@ actionfunction(exchange)
 {
 // 	rl->nexchanges += 1;
 // 	
-// 	vf->length = v->length;
-// 	vf->offset = v->offset;
-// 
-// 	if(write(vf->fd, v->ptr, v->capacity) == v->capacity) {} else
-// 	{
-// 		fail("can't write for exchange. fd: %d; capacity: %u",
-// 			vf->fd, v->capacity);
-// 	}
+//  	vf->length = v->length;
+//  	vf->offset = v->offset;
+//  
+//  	if(pwrite(vf->fd, v->ptr, v->capacity, 0) == v->capacity) {} else
+//  	{
+//  		fail("can't write for exchange. fd: %d; capacity: %u",
+//  			vf->fd, v->capacity);
+//  	}
 // 
 // 	if(munmap(v->ptr, v->capacity) == 0) {} else
 // 	{
@@ -362,5 +403,23 @@ actionfunction(exchange)
 // 			ivf->fd, 0, v->capacity, pmwrite | pmprivate);
 // 	}
 // 
-	return id;
+
+	rl->nexchanges += 1;
+
+	vectorupload(v, vf);
+
+	if(rl->writable)
+	{
+		rl->writable = uiwrite(rl->towrite, id);	
+	}
+	
+	const unsigned i = uiread(rl->toread);
+
+	if(i != (unsigned)-1)
+	{
+		const vectorfile *const ivf = &(((elvector *)vf) - id + i)->vf;
+		vectordownload(ivf, v);
+	}
+
+	return i;
 }

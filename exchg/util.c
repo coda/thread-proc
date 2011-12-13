@@ -189,7 +189,7 @@ char * peekmap(
 
 	if(fd == -1)
 	{
-		flags |= MAP_ANONYMOUS;
+		flags |= MAP_ANONYMOUS; // | MAP_UNINITIALIZED;
 
 		if(cfg->flags & cfghugetlb)
 		{

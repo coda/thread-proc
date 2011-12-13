@@ -266,16 +266,16 @@ static unsigned shrink(
 	vector<eltype>& array, ringlink *const rl,
 	const unsigned id, const unsigned r)
 {
-	const unsigned n = min(
-		(unsigned long)(r % workfactor), (unsigned long)array.size());
-
-	if(n > 0)
-	{
-		array.push_back(heapsum(&array[0], n));
-
-		vector<eltype>::iterator b = array.begin();
-		array.erase(b, b + n);
-	}
+// 	const unsigned n = min(
+// 		(unsigned long)(r % workfactor), (unsigned long)array.size());
+// 
+// 	if(n > 0)
+// 	{
+// 		array.push_back(heapsum(&array[0], n));
+// 
+// 		vector<eltype>::iterator b = array.begin();
+// 		array.erase(b, b + n);
+// 	}
 
 	return id;
 }
