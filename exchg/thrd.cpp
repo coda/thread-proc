@@ -207,9 +207,13 @@ static void process(const testconfig *const cfg)
 	printf("some values\n");
 	for(unsigned i = 0; i < cfg->nworkers; i += 1)
 	{
-		if(arrays[i].v.size())
+		unsigned long len = arrays[i].v.size();
+		if(len)
 		{
-			printf("\t%f\n", arrays[i].v[0]);
+			printf("\t%f\t%lu of %lu\n",
+				arrays[i].v[len / 2],
+				(unsigned long)len / 2,
+				(unsigned long)len);
 		}
 		else
 		{

@@ -3,6 +3,7 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 
 #include <unistd.h>
 #include <sys/wait.h>
@@ -57,12 +58,16 @@ typedef struct
 static eltype * vectorexpand(vector *const v, const unsigned n,
 	const unsigned plen)
 {
+	eprintf("expand rq for %u\n", n);
+
 	const unsigned need = v->offset + v->length + n * sizeof(eltype);
 
 	if(need < v->capacity)
 	{
 		return (eltype *)(v->ptr + v->offset + v->length);
 	}
+
+	eprintf("will really expand\n");
 
 	void *const ptr
 		= mremap(v->ptr, v->capacity,
@@ -75,6 +80,8 @@ static eltype * vectorexpand(vector *const v, const unsigned n,
 
 	v->capacity = align(need, plen);
 	v->ptr = ptr;
+
+	eprintf("expanded capacity: %u\n", v->capacity);
 
 	return (eltype *)(v->ptr + v->offset + v->length);
 }
@@ -105,19 +112,19 @@ static actionfunction((*const functions[])) =
 
 const unsigned nfunctions = (sizeof(functions) / sizeof(void *));
 
-static void routine
-(
+static void routine(
 	ringlink *const rl, elvector *const vectors,
-	const unsigned jid
-) {
+	const unsigned jid)
+{
 	const testconfig *const cfg = rl->cfg;
 	const unsigned iters = cfg->niterations / cfg->nworkers;
 
-	const int fd = vectors[jid].vf.fd;
-	const unsigned len = flength(fd);	
+//	const int fd = vectors[jid].vf.fd;
+//	const unsigned len = flength(fd);	
+	const unsigned len = cfg->pagelength;
 	vector v = {
-		.ptr = peekmap(cfg, fd, 0, len, pmwrite | pmprivate),
-		.capacity = 0,
+		.ptr = peekmap(cfg, -1, 0, len, pmwrite | pmprivate),
+		.capacity = len,
 		.length = 0,
 		.offset = 0 };
 
@@ -223,8 +230,12 @@ static void runjobs
 
 	for(i = 0; ok && i < count; i += 1)
 	{
-		const pid_t p = waitpid(procs[i], NULL, 0);
+		int status;
+		const pid_t p = waitpid(procs[i], &status, 0);
 		ok = p == procs[i];
+
+		eprintf("joined %d with ifsig: %u; termsig: %s\n",
+			p, WIFSIGNALED(status), strsignal(WTERMSIG(status)));
 	}
 
 	if(ok) {} else
@@ -247,8 +258,10 @@ int main(const int argc, const char *const *const argv)
 
 	for(unsigned i = 0; i < cfg.nworkers; i += 1)
 	{
-		// makeshm will align 1 up to pagelength
-		vectors[i].vf.fd = makeshm(&cfg, 1);
+//		// makeshm will align 1 up to pagelength
+//		vectors[i].vf.fd = makeshm(&cfg, 1);
+
+		vectors[i].vf.fd = makeshm(&cfg, 0);
 		vectors[i].vf.length = 0;
 		vectors[i].vf.offset = 0;
 	}
@@ -261,9 +274,13 @@ int main(const int argc, const char *const *const argv)
 
 	for(unsigned i = 0; i < cfg.nworkers; i += 1)
 	{
+		const unsigned len = vectors[i].vf.length;
 		if(vectors[i].vf.length)
 		{
-			printf("\t%f\n", (double)vfelat(&vectors[i].vf, 0));
+			printf("\t%f\t%u of %u\n",
+				(double)vfelat(&vectors[i].vf, len / 2),
+				len / 2,
+				len);
 		}
 		else
 		{
@@ -285,7 +302,9 @@ actionfunction(expand) // rl, vf, v, id, r
 	const unsigned n = r % workfactor;
 	unsigned seed = r;
 	
+	eprintf("before expand. cap: %u\n", v->capacity);
 	eltype *const buf = vectorexpand(v, n, rl->cfg->pagelength);
+	eprintf("after expand. cap: %u\n", v->capacity);
 
 	for(unsigned i = 0; i < n; i += 1)
 	{
@@ -304,12 +323,44 @@ actionfunction(shrink)
 
 actionfunction(exchange)
 {
-	rl->nexchanges += 1;
-
-	if(rl->writable)
-	{
-		rl->writable = uiwrite(rl->towrite, id);
-	}
-
-	return uiread(rl->toread);
+// 	rl->nexchanges += 1;
+// 	
+// 	vf->length = v->length;
+// 	vf->offset = v->offset;
+// 
+// 	if(write(vf->fd, v->ptr, v->capacity) == v->capacity) {} else
+// 	{
+// 		fail("can't write for exchange. fd: %d; capacity: %u",
+// 			vf->fd, v->capacity);
+// 	}
+// 
+// 	if(munmap(v->ptr, v->capacity) == 0) {} else
+// 	{
+// 		fail("can't unmap used vector: ptr: %x; capacity: %u",
+// 			v->ptr, v->capacity);
+// 	}
+// 
+// 	if(rl->writable)
+// 	{
+// 		rl->writable = uiwrite(rl->towrite, id);
+// 	}
+// 
+// 	const unsigned i = uiread(rl->toread);
+// 
+// 	if(i != (unsigned)-1)
+// 	{
+// 		// FIXME: quite a dirty hack
+// 		const vectorfile *const ivf = &((elvector *)vf - id + i)->vf; 
+// 		
+// 		v->offset = ivf->offset;
+// 		v->length = ivf->length;
+// 		v->capacity = flength(ivf->fd);
+// 
+// 		eprintf("vf: %u; capacity: %u\n", i, v->capacity);
+// 
+// 		v->ptr = peekmap(rl->cfg,
+// 			ivf->fd, 0, v->capacity, pmwrite | pmprivate);
+// 	}
+// 
+	return id;
 }

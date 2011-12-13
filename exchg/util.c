@@ -46,7 +46,7 @@ testconfig fillconfig(const unsigned argc,const char *const *const argv)
 		fail("can't get system pagesize");
 	}
 
-	const unsigned baseiter = 1024;
+	const unsigned baseiter = 512;
 	unsigned ni = 2 * baseiter;
 	unsigned nw = 64;
 
@@ -175,18 +175,17 @@ int makeshm(const testconfig *const cfg, const unsigned size)
 }
 
 
-char * peekmap
-(
+char * peekmap(
 	const testconfig *const cfg,
 	const int fd,
 	const unsigned offset,
 	const unsigned length,
-	const unsigned pmflags
-) {
+	const unsigned pmflags)
+{
 	const unsigned len = align(length, cfg->pagelength);
 	
-	unsigned flags = pmflags & pmprivate ? MAP_PRIVATE : MAP_SHARED;
-	const unsigned prot = pmflags & pmwrite ? PROT_WRITE : 0;
+	unsigned flags = (pmflags & pmprivate) ? MAP_PRIVATE : MAP_SHARED;
+	const unsigned prot = (pmflags & pmwrite) ? PROT_WRITE : 0;
 
 	if(fd == -1)
 	{
@@ -283,7 +282,7 @@ unsigned uiread(const int fd)
 	int rv = read(fd, &i, sizeof(i));
 	if(rv == sizeof(i)) {} else
 	{
-		fail("can't read from %d", fd);
+		fail("can't read from %d; byte: %d; i: %x", fd, rv, i);
 	}
 
 	return i;
@@ -308,7 +307,7 @@ unsigned flength(const int fd)
 	off_t l = lseek(fd, 0, SEEK_END);
 	if(l > 0) {} else
 	{
-		fail("can't get fd:%u length", fd);
+		fail("can't get length of fd:%u", fd);
 	}
 
 	if(l < ((unsigned)-1 >> 1)) {} else

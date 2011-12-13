@@ -1,7 +1,7 @@
-cc = clang -std=c99 -pedantic -Wall -Werror -O4 -flto
+cc = gcc -std=c99 -pedantic -Wall -Werror -O4 -flto
 cflags = -D_POSIX_C_SOURCE=200809 -D_GNU_SOURCE -I .
 
-cxx = clang++ -std=c++0x -pedantic -Wall -Werror -O4 -flto
+cxx = g++ -std=c++0x -pedantic -Wall -Werror -O4 -flto
 cxxflags = $(cflags)
 
 
