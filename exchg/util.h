@@ -56,4 +56,6 @@ extern void uclose(const int fd);
 
 extern unsigned flength(const int fd);
 
+extern unsigned align(const unsigned, const unsigned);
+
 #endif

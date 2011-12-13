@@ -86,7 +86,8 @@ testconfig fillconfig(const unsigned argc,const char *const *const argv)
 		.flags = flags, .pagelength = plen };	
 }
 
-static unsigned align(const unsigned n, const unsigned blocksize)
+// static
+unsigned align(const unsigned n, const unsigned blocksize)
 {
 	unsigned r = n % blocksize;
 	unsigned t = (blocksize - r) & ((unsigned)-1 + (r == 0));

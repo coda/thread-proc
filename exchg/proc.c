@@ -8,20 +8,6 @@
 #include <sys/wait.h>
 #include <sys/mman.h>
 
-// typedef struct
-// {
-// 	int fd;
-// 	unsigned length; // overall length;
-// 	unsigned eloffset;
-// 	eltype * elements;
-// 	unsigned elcount;
-// } vector;
-
-// static eltype * vels(const vector *const v)
-// {
-// 	return v->elements + v->eloffset;
-// }
-
 typedef struct
 {
 	int fd;
@@ -62,45 +48,48 @@ typedef struct
 typedef struct
 {
 	char * ptr;
-	unsigned capacity; // in bytes
+	unsigned capacity; // overall in bytes
 	unsigned offset;
 	unsigned length;
 } vector;
+
+// returns pointer to the beginning of space added
+static eltype * vectorexpand(vector *const v, const unsigned n,
+	const unsigned plen)
+{
+	const unsigned need = v->offset + v->length + n * sizeof(eltype);
+
+	if(need < v->capacity)
+	{
+		return (eltype *)(v->ptr + v->offset + v->length);
+	}
+
+	void *const ptr
+		= mremap(v->ptr, v->capacity,
+			align(need, plen), MREMAP_MAYMOVE);
+	
+	if(ptr != MAP_FAILED) {} else
+	{
+		fail("can't perform expanding remap");
+	}
+
+	v->capacity = align(need, plen);
+	v->ptr = ptr;
+
+	return (eltype *)(v->ptr + v->offset + v->length);
+}
 
 #define actionfunction(fname) unsigned fname \
 ( \
 	ringlink *const rl, \
 	vectorfile *const vf, vector *const v, \
 	const unsigned id, \
-	const unsigned n \
+	const unsigned r \
 )
-
-// static unsigned expand(
-// 	ringlink *const,
-// 	vectorfile *const vf, vector *const v,
-// 	const unsigned id,
-// 	const unsigned n);
-// 
-// static unsigned shrink
-// (
-// 	ringlink *const,
-// 	vectorfile *const, vector *const,
-// 	const unsigned,
-// 	const unsigned
-// );
-// 
-// static unsigned exchange
-// (
-// 	ringlink *const,
-// 	vector *const, 	const unsigned, const unsigned);
 
 static actionfunction(expand);
 static actionfunction(shrink);
 static actionfunction(exchange);
-
-// static unsigned (*const functions[])(
-// 	vector *const, ringlink *const, const unsigned,
-// 	const unsigned) =
 
 static actionfunction((*const functions[])) =
 {
@@ -291,46 +280,27 @@ int main(const int argc, const char *const *const argv)
 	return 0;
 }
 
-// static unsigned expand(
-// 	vector *const v, ringlink *const rl,
-// 	const unsigned id, const unsigned r)
-
-actionfunction(expand)
+actionfunction(expand) // rl, vf, v, id, r
 {
-// 	const unsigned n = r % workfactor;
-// 	unsigned seed = r;
-// 
-// 	array.reserve(array.size() + n);
-// 	for(unsigned i = 0; i < n; i += 1)
-// 	{
-// 		array.push_back(elrand(&seed));
-// 	}
+	const unsigned n = r % workfactor;
+	unsigned seed = r;
+	
+	eltype *const buf = vectorexpand(v, n, rl->cfg->pagelength);
+
+	for(unsigned i = 0; i < n; i += 1)
+	{
+		buf[i] = elrand(&seed);
+	}
+
+	v->length += n * sizeof(eltype);
 
 	return id;
 }
-
-// static unsigned shrink(
-// 	vector *const v, ringlink *const rl,
-// 	const unsigned id, const unsigned r)
 
 actionfunction(shrink)
 {
-// 	const unsigned n = min((unsigned long)(r % workfactor), array.size());
-// 
-// 	if(n > 0)
-// 	{
-// 		array.push_back(heapsum(&array[0], n));
-// 
-// 		vector<eltype>::iterator b = array.begin();
-// 		array.erase(b, b + n);
-// 	}
-
 	return id;
 }
-
-// static unsigned exchange(
-// 	vector *const v, ringlink *const rl,
-// 	const unsigned id, const unsigned n)
 
 actionfunction(exchange)
 {

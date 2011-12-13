@@ -35,7 +35,6 @@ struct jobspec
 		elvector *const a,
 		const ringlink l) : arrays(a), cfg(c), id(i)
 	{
-//		rl.listening = 1;
 		rl.writable = 1;
 		rl.nexchanges = 0;
 		rl.toread = l.toread;
@@ -80,18 +79,9 @@ static void * routine(void * arg)
 {
 	jobspec *const j = (jobspec *const)arg;
 
-// 	printf("unit %03u is here with. rd: %d; wr: %d; nit: %u; nwrk: %u\n",
-// 		j->id,
-// 		j->rl.toread, j->rl.towrite,
-// 		j->cfg->niterations, j->cfg->nworkers);
- 
 	const unsigned iters = j->cfg->niterations / j->cfg->nworkers;
 
-//	cout << "routine " << j->id << " with " << iters << "iterations\n";
-
 	unsigned seed = j->id;
-
-//	tr1::uniform_int<unsigned> unif(0, 3);
 
 	unsigned id = j->id;
 	unsigned previd = id;
@@ -101,8 +91,6 @@ static void * routine(void * arg)
 	try {
 		for(i = 0; id != (unsigned)-1 && i < iters; i += 1)
 		{
-	//		cout << unif(eng);
-
 			const unsigned r = rand_r(&seed);
 			const unsigned fn = r % nfunctions;
 
@@ -198,8 +186,6 @@ static void runjobs(
 	{
 		err = pthread_join(threads[i], NULL);
 		ok = err == 0;
-		
-//		eprintf("thread %u joined\n", i); // fflush(stderr);
 	}
 
 	if(ok) {} else
@@ -281,9 +267,6 @@ static unsigned shrink(
 
 	if(n > 0)
 	{
-// 		eprintf("will summ %u of %u els. starting: %p\n",
-// 			n, array.size(), &array[0]);
-
 		array.push_back(heapsum(&array[0], n));
 
 		vector<eltype>::iterator b = array.begin();
@@ -293,56 +276,12 @@ static unsigned shrink(
 	return id;
 }
 
-// static unsigned exchange(
-// 	vector<eltype>& array, ringlink *const rl,
-// 	const unsigned id, const unsigned n)
-// {
-// 
-// 	eprintf("exchange here\n");
-// 
-// 	if(rl->listening) {} else // not listening
-// 	{
-// 		return id;
-// 	}
-// 
-// // 	struct pollfd pfd;
-// // 	pfd.fd = rl->toread;
-// // 	pfd.events = POLLIN;
-// // 
-// // 	const int rv = poll(fds, 2, 0);
-// // 	if(rv > 0)
-// // 	{
-// // 	}
-// // 	else if(rv == 0)
-// // 	{
-// // 		return id; // no data
-// // 	}
-// 
-// 	// uiread will fail on the EOF, but end of communication is handled
-// 	// differently; so
-// 	const unsigned i = uiread(rl->toread);
-// 	
-// 	if(i != (unsigned)-1) {} else // end of comm
-// 	{
-// 		uiwrite(rl->towrite, i);
-// 		rl->listening = 0;
-// 		printf("got end of comm\n");
-// 
-// 		return id;
-// 	}
-// 
-// 	uiwrite(rl->towrite, id);
-// 
-// 	return i;
-// }
-
 static unsigned exchange(
 	vector<eltype>& array, ringlink *const rl,
 	const unsigned id, const unsigned n)
 {
 	rl->nexchanges += 1;
 
-//	eprintf("exchange %d -> %d\n", rl->toread, rl->towrite);
 	if(rl->writable)
 	{
 		rl->writable = uiwrite(rl->towrite, id);
