@@ -8,41 +8,101 @@
 #include <sys/wait.h>
 #include <sys/mman.h>
 
+// typedef struct
+// {
+// 	int fd;
+// 	unsigned length; // overall length;
+// 	unsigned eloffset;
+// 	eltype * elements;
+// 	unsigned elcount;
+// } vector;
+
+// static eltype * vels(const vector *const v)
+// {
+// 	return v->elements + v->eloffset;
+// }
+
 typedef struct
 {
 	int fd;
-	unsigned length; // overall length;
-	unsigned eloffset;
-	eltype * elements;
-	unsigned elcount;
-} vector;
+	unsigned offset; // in bytes
+	unsigned length; // of data, the file length will be detected with lseek
+} vectorfile;
 
-static eltype * vels(const vector *const v)
+static eltype vfelat(const vectorfile *const vf, const unsigned i)
 {
-	return v->elements + v->eloffset;
+	const unsigned elcnt = vf->length /sizeof(eltype);
+	if(i < elcnt) {} else
+	{
+		fail("idx:%i is out of bounds", i);
+	}
+
+	off_t pos = vf->offset + i * sizeof(eltype);
+	if(lseek(vf->fd, SEEK_SET, pos) == pos) {} else
+	{
+		fail("can't seek to pos:%u = off:%u + i:%u",
+			pos, vf->offset, i * sizeof(eltype));
+	}
+
+	eltype value;
+	if(read(vf->fd, &value, sizeof(value)) == sizeof(value)) {} else
+	{
+		fail("can't read");
+	}
+
+	return value;
 }
 
 typedef struct
 {
-	vector v;
-	unsigned char padding[defpad(sizeof(vector), cachelinelength)];
+	vectorfile vf;
+	unsigned char padding[defpad(sizeof(vectorfile), cachelinelength)];
 } elvector;
 
-static unsigned expand(
-	vector *const vector, ringlink *const,
-	const unsigned id, const unsigned n);
+typedef struct
+{
+	char * ptr;
+	unsigned capacity; // in bytes
+	unsigned offset;
+	unsigned length;
+} vector;
 
-static unsigned shrink(
-	vector *const, ringlink *const,
-	const unsigned, const unsigned);
+#define actionfunction(fname) unsigned fname \
+( \
+	ringlink *const rl, \
+	vectorfile *const vf, vector *const v, \
+	const unsigned id, \
+	const unsigned n \
+)
 
-static unsigned exchange(
-	vector *const, ringlink *const,
-	const unsigned, const unsigned);
+// static unsigned expand(
+// 	ringlink *const,
+// 	vectorfile *const vf, vector *const v,
+// 	const unsigned id,
+// 	const unsigned n);
+// 
+// static unsigned shrink
+// (
+// 	ringlink *const,
+// 	vectorfile *const, vector *const,
+// 	const unsigned,
+// 	const unsigned
+// );
+// 
+// static unsigned exchange
+// (
+// 	ringlink *const,
+// 	vector *const, 	const unsigned, const unsigned);
 
-static unsigned (*const functions[])(
-	vector *const, ringlink *const, const unsigned,
-	const unsigned) =
+static actionfunction(expand);
+static actionfunction(shrink);
+static actionfunction(exchange);
+
+// static unsigned (*const functions[])(
+// 	vector *const, ringlink *const, const unsigned,
+// 	const unsigned) =
+
+static actionfunction((*const functions[])) =
 {
 	expand,
 	shrink,
@@ -56,11 +116,21 @@ static unsigned (*const functions[])(
 
 const unsigned nfunctions = (sizeof(functions) / sizeof(void *));
 
-static void routine(
+static void routine
+(
 	ringlink *const rl, elvector *const vectors,
-	const testconfig *const cfg, const unsigned jid)
-{
+	const unsigned jid
+) {
+	const testconfig *const cfg = rl->cfg;
 	const unsigned iters = cfg->niterations / cfg->nworkers;
+
+	const int fd = vectors[jid].vf.fd;
+	const unsigned len = flength(fd);	
+	vector v = {
+		.ptr = peekmap(cfg, fd, 0, len, pmwrite | pmprivate),
+		.capacity = 0,
+		.length = 0,
+		.offset = 0 };
 
 	unsigned seed = jid;
 	unsigned id = jid;
@@ -70,24 +140,21 @@ static void routine(
 			const unsigned r = rand_r(&seed);
 			const unsigned fn = r % nfunctions;
 
-			id = functions[fn](&vectors[id].v, rl, id, r);
+			id = functions[fn](rl, &vectors[id].vf, &v, id, r);
 	}
 
 	uiwrite(rl->towrite, (unsigned)-1);
 
  	printf("unit %03u(%u) done. iters: %u; exchanges: %u\n",
  		jid, getpid(), i, rl->nexchanges);
-
-	sleep(100000);
 }
 
-static void runjobs(
+static void runjobs
+(
 	const testconfig *const cfg,
 	elvector *const vectors,
-	void (*const code)(
-		ringlink *const, elvector *const, const testconfig *const,
-		unsigned))
-{
+	void (*const code)(ringlink *const, elvector *const, unsigned)
+) {
 	const unsigned count = cfg->nworkers;
 	pid_t procs[count];
 
@@ -95,11 +162,9 @@ static void runjobs(
 	unsigned err = 0;
 
 	int p0rd = -1;
-//	int p0wr = -1;
 	int p1rd = -1;
 	int p1wr = -1;
 
-//	int zerord = -1;
 	int zerowr = -1;
 
 	unsigned i;
@@ -111,14 +176,9 @@ static void runjobs(
 		if(i != 0)
 		{
 			p0rd = p1rd;
-//			p0wr = p1wr;
 		}
 		else
 		{
-// 			makerlink(&p0wr, &p0rd);
-// 			zerord = p0rd;
-// 			zerowr = p0wr;
-
 			makerlink(&zerowr, &p0rd);
 		}
 
@@ -129,7 +189,6 @@ static void runjobs(
 		else
 		{
 			p1wr = zerowr;
-//			p1rd = zerord;
 		}
 
 		pid_t p = fork();
@@ -139,42 +198,16 @@ static void runjobs(
 				.toread = p0rd,
 				.towrite = p1wr,
 				.nexchanges = 0,
-				.writable = 1 };
-// 			rl.toread = p0rd;
-// 			rl.towrite = p1wr;
-
-// 			eprintf(
-// 				"%03u p0: (%d; %d); p1: (%d; %d); "
-// 				"need: (%d; %d); close: (%d; %d)\n",
-// 				i, p0rd, p0wr, p1rd, p1wr,
-// 				p0rd, p1wr, p1rd, p0wr);
-
-// 			if(i != count - 1)
-// 			{
-// 				uclose(p0wr);
-// 				uclose(p1rd);
-// 			}
-
-			eprintf("%03u. need: %d %d; ", i, p0rd, p1wr);
+				.writable = 1,
+				.cfg = cfg };
 
 			if(i != count - 1)
 			{
-				eprintf("close: %d; ", zerowr); 
 				uclose(zerowr);
-
-// 				if(i)
-// 				{
-// 					eprintf("close %d", p1rd);
-// 					uclose(p1rd);
-// 				}
-
-				eprintf("close %d", p1rd);
 				uclose(p1rd);
 			}
 
-			eprintf("\n");
-
-			code(&rl, vectors, cfg, i);
+			code(&rl, vectors, i);
 			exit(0);
 		}
 		else if(p > 0)
@@ -183,11 +216,6 @@ static void runjobs(
 
 			uclose(p0rd);
 			uclose(p1wr);
-
-// 			if(i != count - 1) {} else
-// 			{
-// 				uclose(zerowr);
-// 			}
 		}
 		else
 		{
@@ -226,7 +254,15 @@ int main(const int argc, const char *const *const argv)
 	const unsigned vectslen = sizeof(elvector) * cfg.nworkers;
 	
 	elvector *const vectors
-		= (elvector *)peekmap(&cfg, -1, 0, vectslen, PROT_WRITE);
+		= (elvector *)peekmap(&cfg, -1, 0, vectslen, pmwrite);
+
+	for(unsigned i = 0; i < cfg.nworkers; i += 1)
+	{
+		// makeshm will align 1 up to pagelength
+		vectors[i].vf.fd = makeshm(&cfg, 1);
+		vectors[i].vf.length = 0;
+		vectors[i].vf.offset = 0;
+	}
 
 	fflush(stderr);
 	fflush(stdout);
@@ -236,9 +272,9 @@ int main(const int argc, const char *const *const argv)
 
 	for(unsigned i = 0; i < cfg.nworkers; i += 1)
 	{
-		if(vectors[i].v.elcount)
+		if(vectors[i].vf.length)
 		{
-			printf("\t%f\n", vels(&vectors[i].v)[0]);
+			printf("\t%f\n", (double)vfelat(&vectors[i].vf, 0));
 		}
 		else
 		{
@@ -255,9 +291,11 @@ int main(const int argc, const char *const *const argv)
 	return 0;
 }
 
-static unsigned expand(
-	vector *const v, ringlink *const rl,
-	const unsigned id, const unsigned r)
+// static unsigned expand(
+// 	vector *const v, ringlink *const rl,
+// 	const unsigned id, const unsigned r)
+
+actionfunction(expand)
 {
 // 	const unsigned n = r % workfactor;
 // 	unsigned seed = r;
@@ -271,9 +309,11 @@ static unsigned expand(
 	return id;
 }
 
-static unsigned shrink(
-	vector *const v, ringlink *const rl,
-	const unsigned id, const unsigned r)
+// static unsigned shrink(
+// 	vector *const v, ringlink *const rl,
+// 	const unsigned id, const unsigned r)
+
+actionfunction(shrink)
 {
 // 	const unsigned n = min((unsigned long)(r % workfactor), array.size());
 // 
@@ -288,9 +328,11 @@ static unsigned shrink(
 	return id;
 }
 
-static unsigned exchange(
-	vector *const v, ringlink *const rl,
-	const unsigned id, const unsigned n)
+// static unsigned exchange(
+// 	vector *const v, ringlink *const rl,
+// 	const unsigned id, const unsigned n)
+
+actionfunction(exchange)
 {
 	rl->nexchanges += 1;
 

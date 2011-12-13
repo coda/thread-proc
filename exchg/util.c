@@ -12,7 +12,6 @@
 #include <sys/types.h>
 #include <sys/mman.h>
 
-
 void eprintf(const char *const format, ...)
 {
 	va_list al;
@@ -163,11 +162,6 @@ int makeshm(const testconfig *const cfg, const unsigned size)
 	}
 
 	const long plen = cfg->pagelength;
-// 	if(plen > 0) {} else
-// 	{
-// 		eprintf("err: %s. can't get page length\n", strerror(errno));
-// 		exit(-1);
-// 	}
 
 	const unsigned shmlen = align(size, plen);
 
@@ -179,16 +173,19 @@ int makeshm(const testconfig *const cfg, const unsigned size)
 	return fd;
 }
 
-char * peekmap(
+
+char * peekmap
+(
 	const testconfig *const cfg,
 	const int fd,
 	const unsigned offset,
 	const unsigned length,
-	const unsigned prot)
-{
+	const unsigned pmflags
+) {
 	const unsigned len = align(length, cfg->pagelength);
 	
-	unsigned flags = MAP_SHARED;
+	unsigned flags = pmflags & pmprivate ? MAP_PRIVATE : MAP_SHARED;
+	const unsigned prot = pmflags & pmwrite ? PROT_WRITE : 0;
 
 	if(fd == -1)
 	{
@@ -303,4 +300,20 @@ void ignoresigpipe(void)
 	{
 		fail("can't ignore SIGPIPE");
 	}
+}
+
+unsigned flength(const int fd)
+{
+	off_t l = lseek(fd, 0, SEEK_END);
+	if(l > 0) {} else
+	{
+		fail("can't get fd:%u length", fd);
+	}
+
+	if(l < ((unsigned)-1 >> 1)) {} else
+	{
+		fail("fd:%u too long", fd);
+	}
+
+	return l;
 }

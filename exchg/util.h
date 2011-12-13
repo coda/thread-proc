@@ -18,12 +18,16 @@ extern void eprintf(const char *const, ...);
 
 extern int makeshm(const testconfig *const cfg, const unsigned size);
 
-extern char * peekmap(
+enum { pmwrite = 1, pmprivate = 2 };
+
+extern char * peekmap
+(
 	const testconfig *const cfg,
 	const int fd,
 	const unsigned offset,
 	const unsigned len,
-	const unsigned flag);
+	const unsigned flag
+);
 
 extern void dropmap(const testconfig *const cfg, void *const, const unsigned);
 
@@ -35,9 +39,9 @@ typedef struct
 {
 	int towrite;
 	int toread;
-//	unsigned listening;
 	unsigned nexchanges;
 	unsigned writable;
+	const testconfig * cfg;
 } ringlink;
 
 extern void makerlink(int *const towrite, int *const toread);
@@ -49,5 +53,7 @@ extern unsigned uiread(const int fd);
 extern void ignoresigpipe(void);
 
 extern void uclose(const int fd);
+
+extern unsigned flength(const int fd);
 
 #endif

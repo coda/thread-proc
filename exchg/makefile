@@ -20,10 +20,10 @@ clean:
 	$(cxx) -c $(cxxflags) $< -o $@
 
 et: thrd.cpp $(code)
-	$(cxx) $(cxxflags) $^ -pthread -lrt -o $@
+	$(cxx) $(cxxflags) $^ -pthread -o $@
 
 ep: proc.c $(code)
-	$(cc) $(cflags) $^ -o $@
+	$(cc) $(cflags) $^ -lrt -o $@
 
 util.o: util.c util.h
 work.o: work.c work.h
