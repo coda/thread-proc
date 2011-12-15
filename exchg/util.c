@@ -94,10 +94,11 @@ unsigned align(const unsigned n, const unsigned blocksize)
 	return n + t;
 }
 
-// static unsigned aligndown(const unsigned n, const unsigned blocksize)
-// {
-// 	return n - n % blocksize;
-// }
+// static
+unsigned aligndown(const unsigned n, const unsigned blocksize)
+{
+	return n - n % blocksize;
+}
  
 static const char * fmtdetect()
 {

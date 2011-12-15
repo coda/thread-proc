@@ -25,8 +25,6 @@ static eltype vfelat(const vectorfile *const vf, const unsigned i)
 		fail("idx: %i is out of bounds", i);
 	}
 
-//	eprintf("vf->fd length: %u\n", flength(vf->fd));
-
 	off_t pos = vf->offset + i * sizeof(eltype);
 	if(lseek(vf->fd, pos, SEEK_SET) == pos) {} else
 	{
@@ -57,6 +55,18 @@ typedef struct
 	unsigned length;
 } vector;
 
+// static unsigned vectorsize(const vector *const v)
+// {
+// 	const unsigned len = v->length;
+// 	
+// 	if(len % sizeof(eltype) == 0) {} else
+// 	{
+// 		fail("vect size. length unaligned");
+// 	}
+// 
+// 	return len / sizeof(eltype);
+// }
+ 
 // returns pointer to the beginning of space added
 static eltype * vectorexpand(vector *const v, const unsigned n,
 	const unsigned plen)
@@ -65,6 +75,9 @@ static eltype * vectorexpand(vector *const v, const unsigned n,
 
 	if(need < v->capacity)
 	{
+// 		const unsigned len = v->length;
+// 		v->length += n * sizeof(eltype);
+ 
 		return (eltype *)(v->ptr + v->offset + v->length);
 	}
 
@@ -77,10 +90,45 @@ static eltype * vectorexpand(vector *const v, const unsigned n,
 		fail("can't perform expanding remap");
 	}
 
+//	const unsigned len = v->length;
+
 	v->capacity = align(need, plen);
+//	v->length += n * sizeof(eltype);
 	v->ptr = ptr;
 
 	return (eltype *)(v->ptr + v->offset + v->length);
+}
+
+static void vectorshrink(vector *const v, const unsigned plen)
+{
+	const unsigned remapoff = aligndown(v->offset, plen);
+
+	if(remapoff > 0)
+	{
+		const unsigned remaplen = v->capacity - remapoff;
+		
+// 		eprintf("rml: %u; rmo: %u\n",
+// 			remaplen % plen,
+// 			remapoff % plen);
+
+		void *const ptr
+			= mremap(v->ptr + remapoff, remaplen,
+				remaplen, MREMAP_MAYMOVE);
+		
+		if(ptr != MAP_FAILED) {} else
+		{
+			fail("shrinking. can't remap");
+		}
+
+		if(munmap(v->ptr, remapoff) == 0) {} else
+		{
+			fail("shrinking. can't unmap");
+		}	
+
+		v->ptr = ptr;
+		v->offset -= remapoff;
+		v->capacity = remaplen;
+	}
 }
 
 static void vectorupload(const vector *const v, vectorfile *const vf)
@@ -154,8 +202,6 @@ static void routine(
 	const testconfig *const cfg = rl->cfg;
 	const unsigned iters = cfg->niterations / cfg->nworkers;
 
-//	const int fd = vectors[jid].vf.fd;
-//	const unsigned len = flength(fd);	
 	const unsigned len = cfg->pagelength;
 	vector v = {
 		.ptr = peekmap(cfg, -1, 0, len, pmwrite | pmprivate),
@@ -278,8 +324,8 @@ static void runjobs
 		const pid_t p = waitpid(procs[i], &status, 0);
 		ok = p == procs[i];
 
-		eprintf("joined %d with ifsig: %u; termsig: %s\n",
-			p, WIFSIGNALED(status), strsignal(WTERMSIG(status)));
+// 		eprintf("joined %d with ifsig: %u; termsig: %s\n",
+// 			p, WIFSIGNALED(status), strsignal(WTERMSIG(status)));
 	}
 
 	if(ok) {} else
@@ -302,9 +348,6 @@ int main(const int argc, const char *const *const argv)
 
 	for(unsigned i = 0; i < cfg.nworkers; i += 1)
 	{
-//		// makeshm will align 1 up to pagelength
-//		vectors[i].vf.fd = makeshm(&cfg, 1);
-
 		vectors[i].vf.fd = makeshm(&cfg, 0);
 		vectors[i].vf.length = 0;
 		vectors[i].vf.offset = 0;
@@ -346,9 +389,7 @@ actionfunction(expand) // rl, vf, v, id, r
 	const unsigned n = r % workfactor;
 	unsigned seed = r;
 	
-//	eprintf("before expand. cap: %u\n", v->capacity);
 	eltype *const buf = vectorexpand(v, n, rl->cfg->pagelength);
-//	eprintf("after expand. cap: %u\n", v->capacity);
 
 	for(unsigned i = 0; i < n; i += 1)
 	{
@@ -360,8 +401,35 @@ actionfunction(expand) // rl, vf, v, id, r
 	return id;
 }
 
+static unsigned min(const unsigned a, const unsigned b)
+{
+	return a < b ? a : b;
+}
+
 actionfunction(shrink)
 {
+	const unsigned cnt = v->length / sizeof(eltype *);
+
+	const unsigned n = min(r % workfactor, cnt);
+	eltype * buf = (eltype *)(v->ptr + v->offset);
+
+	if(n > 0)
+	{
+		const eltype sum = heapsum(buf, n);
+
+//		eprintf("before shrink %u elems: %u; ", n, vectorsize(v));
+
+		v->offset += n * sizeof(eltype);
+		v->length -= n * sizeof(eltype);
+ 		vectorshrink(v, rl->cfg->pagelength);
+
+//		eprintf("after: %u\n", vectorsize(v));
+
+		buf = vectorexpand(v, 1, rl->cfg->pagelength);
+		buf[0] = sum;
+		v->length += sizeof(eltype);
+	}
+
 	return id;
 }
 
