@@ -55,7 +55,7 @@ static void * multroutine(void * arg)
 
 	matmul(a, setup.b, al.baserow, al.nrows, m, n, r);
 
-	printf("mult %u with %u rows is done\n", id, l);
+	printf("mult %u with %u rows is done\n", id, al.nrows);
 
 	return NULL;
 }
@@ -96,7 +96,7 @@ static void * randroutine(void * arg)
 	matrand(id, a, al.baserow, al.nrows, m, tilecols);
 	matrand(id * 5, b, bl.baserow, bl.nrows, n, tilerows); 
 
-	printf("rand %u with %u rows is done\n", id, l);
+	printf("rand %u with %u rows is done\n", id, al.nrows);
 
 // 	printf("some values\n");
 // 	for(unsigned i = 0; i < 8; i += 1)

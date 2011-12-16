@@ -55,7 +55,11 @@ static void runjobs(const unsigned count, void (* routine)(const unsigned))
 
 	for(unsigned i = 0; ok && i < count; i += 1)
 	{
-		ok = waitpid(procs[i], NULL, 0) == procs[i];
+		int status;
+		pid_t p = waitpid(procs[i], &status, 0);
+		ok = p == procs[i]
+			&& WIFEXITED(status)
+			&& WEXITSTATUS(status) == 0;
 	}
 
 	if(ok) {} else
@@ -221,6 +225,8 @@ int main(int argc, const char *const *const argv)
 
 	printf("multiplication\n"); fflush(stdout); fflush(stderr);
 	runjobs(nw, multroutine);
+
+	printf("DONE\n");
 
 	return 0;
 }

@@ -55,13 +55,15 @@ testconfig fillconfig(const unsigned argc,const char *const *const argv)
 	if(argc > 1)
 	{
 		const int i = atoi(argv[1]);
-		sz = i > 0 ? i * elcount : sz;
+//		sz = i > 0 ? i * elcount : sz;
+		nw = i > 0 ? i : nw;
 	}
 
 	if(argc > 2)
 	{
 		const int i = atoi(argv[2]);
-		nw = i > 0 ? i : nw;
+//		nw = i > 0 ? i : nw;
+		sz = i > 0 ? i * elcount : sz;
 	}
 
 	unsigned plen = sysplen;
