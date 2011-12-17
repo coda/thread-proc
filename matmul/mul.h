@@ -5,9 +5,9 @@ typedef double eltype; // matrix element type
 
 enum
 {
-	tilesize = 4096,
+	tilesize = 4096 / sizeof(eltype),
 	tilerows = 32,
-	tilecols = tilesize / sizeof(eltype) / tilerows
+	tilecols = tilesize / tilerows
 };
 
 extern void matmul(
