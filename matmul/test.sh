@@ -40,7 +40,7 @@ args=("$@")
 # for i in "${args[@]}"; do echo $i; done
 
 
-for((nw = 1; nw <= $UPTO; nw <<= 2))
+for((nw = 4; nw <= $UPTO; nw <<= 2))
 do
 	exectimes=()
 

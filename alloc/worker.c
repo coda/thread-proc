@@ -14,13 +14,16 @@ void fillconfig(unsigned argc, char** argv)
 	if(argc > 1)
 	{
 		int i = atoi(argv[1]);
-		ni = i > 0 ? i : 10000 * nw;
+//		ni = i > 0 ? i : 10000 * nw;
+		nw = i > 0 ? i : 64;
 	}
 
 	if(argc > 2)
 	{
 		int i = atoi(argv[2]);
-		nw = i > 0 ? i : 64;
+//		nw = i > 0 ? i : 64;
+		ni = i > 0 ? i : 10000 * nw;
+
 	}
 
 	cfg.nworkers = nw;

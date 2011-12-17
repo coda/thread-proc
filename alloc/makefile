@@ -1,4 +1,4 @@
-cc = clang -std=c99 -Wall -Werror -O4 -D_POSIX_SOURCE
+cc = clang -std=c99 -Wall -Werror -O4 -flto -D_POSIX_SOURCE
 cflags = -I .
 
 all: tt pt
