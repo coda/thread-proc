@@ -21,7 +21,7 @@ do
 	do
 		echo "warming with: ./$i $nw ${args[@]}" 1>&2
 
-		{ time ./$i $nw ${args[@]}; } > /dev/null
+		{ time ./$i $nw ${args[@]}; } &> /dev/null
 
 		echo "testing with: ./$i $nw ${args[@]}" 1>&2
 			
