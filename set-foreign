@@ -1,0 +1,13 @@
+set -e
+
+if test -z "$1"
+then
+	prefix="$HOME/Gits/0xfb"
+else
+	prefix="$1"
+fi
+
+test -d foreign || mkdir foreign
+
+cd foreign
+git clone "$prefix/mkenv"

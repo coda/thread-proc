@@ -1,5 +1,5 @@
-#include <./util.h>
-#include <./mul.h>
+#include <matmul/util.h>
+#include <matmul/mul.h>
 
 #include <stdlib.h>
 #include <stdarg.h>

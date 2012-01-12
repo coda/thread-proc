@@ -1,0 +1,40 @@
+mmbld = $(bld)/matmul
+
+mmsrc = \
+	naivemul.c \
+	tilemul.c \
+	util.c \
+	thrd.c \
+	proc.c \
+	proconfs.c
+
+naive = $(call c2o, $(mmbld), util.c naivemul.c)
+tile = $(call c2o, $(mmbld), util.c tilemul.c)
+
+matmul: $(addprefix $(mmbld)/, mnt mtt mnp mtp mnpf mtpf)
+
+$(mmbld)/mnt: $(mmbld)/thrd.o $(naive)
+	@ echo -e '\tlnk\t$@' \
+	&& $(lnk) $(lflags) $^ -pthread -o $@
+
+$(mmbld)/mtt: $(mmbld)/thrd.o $(tile)
+	@ echo -e '\tlnk\t$@' \
+	&& $(lnk) $(lflags) $^ -pthread -o $@
+
+$(mmbld)/mnp: $(mmbld)/proc.o $(naive)
+	@ echo -e '\tlnk\t$@' \
+	&& $(lnk) $(lflags) $^ -o $@
+	
+$(mmbld)/mtp: $(mmbld)/proc.o $(tile)
+	@ echo -e '\tlnk\t$@' \
+	&& $(lnk) $(lflags) $^ -o $@
+
+$(mmbld)/mnpf: $(mmbld)/proconfs.o $(naive)
+	@ echo -e '\tlnk\t$@' \
+	&& $(lnk) $(lflags) $^ -lrt -o $@
+
+$(mmbld)/mtpf: $(mmbld)/proconfs.o $(tile)
+	@ echo -e '\tlnk\t$@' \
+	&& $(lnk) $(lflags) $^ -lrt -o $@
+
+include $(call o2d, $(call c2o, $(mmbld), $(mmsrc)))

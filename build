@@ -1,0 +1,12 @@
+set -e
+
+fgn="$(dirname "$0")/foreign"
+bld="$(dirname "$0")/bld"
+
+bld="$(cd "$bld" && pwd)"
+fgn="$(cd "$fgn" && pwd)"
+tcn=clang
+
+echo $fgn
+
+(cd src && make -j 5 -f mkfile bld="$bld" foreign="$fgn" toolchain="$tcn")
