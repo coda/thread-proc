@@ -7,7 +7,7 @@ typedef struct {
 	unsigned size;
 	unsigned nworkers;
 	unsigned ncpu;
-	unsigned cpulist[0];
+	unsigned cpulist[1];
 } runconfig;
 
 extern runconfig * formconfig(const int argc, const char *const *const argv,

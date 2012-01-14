@@ -1,12 +1,13 @@
 set -e
 
-fgn="$(dirname "$0")/foreign"
-bld="$(dirname "$0")/bld"
+base="$(dirname "$0")"
+
+fgn="$base/foreign"
+bld="$base/bld"
 
 bld="$(cd "$bld" && pwd)"
 fgn="$(cd "$fgn" && pwd)"
 tcn=clang
 
-echo $fgn
-
-(cd src && make -j 5 -f mkfile bld="$bld" foreign="$fgn" toolchain="$tcn")
+(cd "$base/src" \
+	&& make -j 5 -f gnu.mk bld="$bld" foreign="$fgn" toolchain="$tcn")
