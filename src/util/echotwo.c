@@ -27,5 +27,5 @@ void fail(const char *const format, ...)
 
 	fputc('\n', stderr);
 
-	exit(1);
+	exit(EXIT_FAILURE);
 }

@@ -7,7 +7,16 @@ bld="$base/bld"
 
 bld="$(cd "$bld" && pwd)"
 fgn="$(cd "$fgn" && pwd)"
-tcn=gcc
+tcn="gcc"
 
-(cd "$base/src" \
-	&& make -j 5 -f gnu.mk bld="$bld" foreign="$fgn" toolchain="$tcn")
+makecmd='make -j 5 -f gnu.mk bld="$bld" foreign="$fgn" toolchain="$tcn"'
+
+if test "$1" = DBG
+then
+	makecmd+=' debug=1'
+fi
+
+# (cd "$base/src" \
+# 	&& make -j 5 -f gnu.mk bld="$bld" foreign="$fgn" toolchain="$tcn")
+
+(cd "$base/src" && eval "$makecmd")

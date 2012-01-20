@@ -1,14 +1,14 @@
-lbld = $(bld)/util
+ubld = $(bld)/util
 
-lsrc = \
+usrc = \
 	config.c \
 	echotwo.c \
 	cfgtest.c
 
-lobj = $(call c2o, $(lbld), $(lsrc))
+uobj = $(call c2o, $(ubld), $(usrc))
 
-libutil: $(bld)/bin/cfgtest $(lobj)
+libutil: $(bld)/bin/cfgtest $(uobj)
 
-$(bld)/bin/cfgtest: $(lbld)/cfgtest.o $(lobj)
+$(bld)/bin/cfgtest: $(ubld)/cfgtest.o $(uobj)
 
-include $(call o2d, $(lobj))
+include $(call o2d, $(uobj))
