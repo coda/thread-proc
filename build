@@ -7,7 +7,7 @@ bld="$base/bld"
 
 bld="$(cd "$bld" && pwd)"
 fgn="$(cd "$fgn" && pwd)"
-tcn=clang
+tcn=gcc
 
 (cd "$base/src" \
 	&& make -j 5 -f gnu.mk bld="$bld" foreign="$fgn" toolchain="$tcn")

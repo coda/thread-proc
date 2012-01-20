@@ -10,4 +10,10 @@ fi
 test -d foreign || mkdir foreign
 
 cd foreign
-git clone "$prefix/mkenv"
+
+if test -d mkenv
+then
+	(cd mkenv; git pull)
+else
+	git clone "$prefix/mkenv"
+fi

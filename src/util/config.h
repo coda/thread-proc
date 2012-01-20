@@ -3,14 +3,14 @@
 
 typedef struct {
 	unsigned flags;
-	int pagelength;
+	unsigned pagelength;
 	unsigned size;
 	unsigned nworkers;
-	unsigned ncpu;
-	unsigned cpulist[1];
+	unsigned ncores;
+	unsigned corelist[1];
 } runconfig;
 
-extern runconfig * formconfig(const int argc, const char *const *const argv,
+extern runconfig * formconfig(const int argc, const char *const argv[],
 	const unsigned defaultsize, const unsigned defaultnworkers);
 
 extern void freeconfig(runconfig *const rc);
