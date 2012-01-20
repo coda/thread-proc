@@ -3,6 +3,7 @@ ubld = $(bld)/util
 usrc = \
 	config.c \
 	echotwo.c \
+	procspawn.c \
 	cfgtest.c
 
 uobj = $(call c2o, $(ubld), $(usrc))
