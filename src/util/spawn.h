@@ -3,18 +3,13 @@
 
 #include <./util/config.h>
 
-extern void treespawn
+typedef void * (* treepreroutine)
 (
-	void * (*const preroutine)
-	(
-		const unsigned id,
-		const runconfig *const rc
-		void *const arg
-	),
-	void (*const routine)(void *const arg),
-	const unsigned id,
-	void *const arg,
-	const runconfig *const rc
+	const unsigned, const runconfig *const, void *const
 );
+
+typedef void (* treeroutine)(void *const);
+
+extern void treespawn(treepreroutine, treeroutine, const runconfig *const);
 
 #endif
