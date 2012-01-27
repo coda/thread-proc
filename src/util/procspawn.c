@@ -67,12 +67,12 @@ static pid_t forkf(char onerror[])
 }
 
 static void runnode(const treepreroutine tpr, const treeroutine tr,
-	const unsigned id, const runconfig *const rc, void *const prevarg);
+	const unsigned id, const runconfig *const rc, void *const parentarg);
 
-extern void treespawn(treepreroutine tpr, treeroutine tr,
+void treespawn(const treepreroutine tpr, const treeroutine tr,
 	const runconfig *const rc)
 {
-	pid_t p = forkf("can't fork proc tree controller");
+	pid_t p = forkf("can't fork proc tree root");
 
 	if(p > 0)
 	{
@@ -98,20 +98,23 @@ extern void treespawn(treepreroutine tpr, treeroutine tr,
 }
 
 static void runnode(const treepreroutine tpr, const treeroutine tr,
-	const unsigned id, const runconfig *const rc, void *const prevarg)
+	const unsigned id, const runconfig *const rc, void *const parentarg)
 {
-	void * arg = tpr(id, rc, prevarg);
-	free(prevarg);
+	void *const arg = tpr(id, rc, parentarg);
+	// if(parentarg)
+	// {
+	// 	free(parentarg);
+	// }
 
 	pid_t pids[2] = { -1, -1 };
-	pid_t ids[2] = { 2*id + 1, 2*id + 2 };
+	const unsigned ids[2] = { 2*id + 1, 2*id + 2 };
 
 	for(unsigned i = 0; i < 2; i += 1)
 	{
 		if(ids[i] < rc->nworkers)
 		{
 			char msg[64];
-			sprintf(msg, "can't fork job %u\n", ids[i]);
+			sprintf(msg, "can't fork job %u", ids[i]);
 
 			pid_t p = forkf(msg);
 
@@ -129,11 +132,11 @@ static void runnode(const treepreroutine tpr, const treeroutine tr,
 	}
 
 	tr(arg);
-	free(arg);
+	// free(arg);
 
 	for(unsigned i = 0; i < 2; i += 1)
 	{
-		pid_t p = pids[i];
+		const pid_t p = pids[i];
 
 		if(p > 0)
 		{
