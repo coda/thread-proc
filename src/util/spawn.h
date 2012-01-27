@@ -3,10 +3,8 @@
 
 #include <./util/config.h>
 
-typedef void * (* treepreroutine)
-(
-	const unsigned, const runconfig *const, void *const
-);
+typedef void * (* treepreroutine)(
+	const unsigned, const runconfig *const, void *const);
 
 typedef void (* treeroutine)(void *const);
 

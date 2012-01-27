@@ -2,6 +2,7 @@
 #include <./util/echotwo.h>
 
 #include <stdlib.h>
+#include <stdio.h>
 #include <unistd.h>
 #include <signal.h>
 #include <sched.h>
@@ -19,7 +20,7 @@ static void waitsuccess(const pid_t p)
 	}
 	else
 	{
-		fail("can't wait up process %d exit", p);
+		fail("wait for %d 0-exit is failed", p);
 	}
 }
 
@@ -38,45 +39,46 @@ static void cancelonfail(int status, void * arg)
 	fail("can't send signal to tree proc group");
 }
 
-static void setaffinity(
-	const runconfig *const rc,
-	const pid_t p, const unsigned core
-) {
+static void setaffinity(const pid_t p, const runconfig *const rc,
+	const unsigned id)
+{
 	unsigned char coresetbytes[CPU_ALLOC_SIZE(rc->ncores)];
 	cpu_set_t *const coreset = (cpu_set_t *)coresetbytes;
 	CPU_ZERO_S(sizeof(coreset), coreset);
-	CPU_SET_S(core, sizeof(coreset), coreset);
+	CPU_SET_S(rc->corelist[id % rc->ncores], sizeof(coreset), coreset);
 
 	if(sched_setaffinity(p, sizeof(coreset), coreset) == 0) { } else
 	{
-		fail("can't set affinity to %u core for proc %d", core, p);
+		fail("can't set affinity to %u core for proc %d",
+			rc->corelist[id % rc->ncores], p);
 	}
 }
 
-static void runnode
-(
-	const treepreroutine tpr,
-	const treeroutine tr,
-	const unsigned id,
-	const runconfig *const rc,
-	void *const prevarg
-) {
-}
-
-extern void treespawn
-(
-	treepreroutine tpr, treeroutine tr, const runconfig *const rc
-) {
-	pid_t p = fork();
+static pid_t forkf(char onerror[])
+{
+	const pid_t p = fork();
 
 	if(p < 0)
 	{
-		fail("can't fork proc tree controller");
+		fail(onerror);
 	}
+
+	return p;
+}
+
+static void runnode(const treepreroutine tpr, const treeroutine tr,
+	const unsigned id, const runconfig *const rc, void *const prevarg);
+
+extern void treespawn(treepreroutine tpr, treeroutine tr,
+	const runconfig *const rc)
+{
+	pid_t p = forkf("can't fork proc tree controller");
+
 	if(p > 0)
 	{
-		setaffinity(rc, p, rc->corelist[0]);
+		setaffinity(p, rc, 0);
 		waitsuccess(p);
+		eprintf("proc tree DONE\n");
 	}
 	else
 	{
@@ -92,5 +94,50 @@ extern void treespawn
 
 		runnode(tpr, tr, 0, rc, NULL);
 		exit(0);
+	}
+}
+
+static void runnode(const treepreroutine tpr, const treeroutine tr,
+	const unsigned id, const runconfig *const rc, void *const prevarg)
+{
+	void * arg = tpr(id, rc, prevarg);
+	free(prevarg);
+
+	pid_t pids[2] = { -1, -1 };
+	pid_t ids[2] = { 2*id + 1, 2*id + 2 };
+
+	for(unsigned i = 0; i < 2; i += 1)
+	{
+		if(ids[i] < rc->nworkers)
+		{
+			char msg[64];
+			sprintf(msg, "can't fork job %u\n", ids[i]);
+
+			pid_t p = forkf(msg);
+
+			if(p > 0)
+			{
+				setaffinity(p, rc, ids[i]);
+				pids[i] = p;
+			}
+			else
+			{
+				runnode(tpr, tr, ids[i], rc, arg);
+				exit(0);
+			}
+		}
+	}
+
+	tr(arg);
+	free(arg);
+
+	for(unsigned i = 0; i < 2; i += 1)
+	{
+		pid_t p = pids[i];
+
+		if(p > 0)
+		{
+			waitsuccess(p);
+		}
 	}
 }
