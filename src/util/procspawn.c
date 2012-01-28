@@ -66,11 +66,10 @@ static pid_t forkf(char onerror[])
 	return p;
 }
 
-static void runnode(const treepreroutine tpr, const treeroutine tr,
+static void runnode(const treeplugin *const tp,
 	const unsigned id, const runconfig *const rc, void *const parentarg);
 
-void treespawn(const treepreroutine tpr, const treeroutine tr,
-	const runconfig *const rc)
+void treespawn(const treeplugin *const tp, const runconfig *const rc)
 {
 	pid_t p = forkf("can't fork proc tree root");
 
@@ -92,19 +91,16 @@ void treespawn(const treepreroutine tpr, const treeroutine tr,
 			fail("can't set exit on fail handler");
 		}
 
-		runnode(tpr, tr, 0, rc, NULL);
+		runnode(tp, 0, rc, NULL);
 		exit(0);
 	}
 }
 
-static void runnode(const treepreroutine tpr, const treeroutine tr,
+static void runnode(const treeplugin *const tp,
 	const unsigned id, const runconfig *const rc, void *const parentarg)
 {
-	void *const arg = tpr(id, rc, parentarg);
-	// if(parentarg)
-	// {
-	// 	free(parentarg);
-	// }
+	void *const arg = tp->makeargument(id, rc, parentarg);
+	tp->dropargument(parentarg);
 
 	pid_t pids[2] = { -1, -1 };
 	const unsigned ids[2] = { 2*id + 1, 2*id + 2 };
@@ -125,14 +121,14 @@ static void runnode(const treepreroutine tpr, const treeroutine tr,
 			}
 			else
 			{
-				runnode(tpr, tr, ids[i], rc, arg);
+				runnode(tp, ids[i], rc, arg);
 				exit(0);
 			}
 		}
 	}
 
-	tr(arg);
-	// free(arg);
+	tp->treeroutine(arg);
+	tp->dropargument(arg);
 
 	for(unsigned i = 0; i < 2; i += 1)
 	{

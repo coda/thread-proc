@@ -29,8 +29,8 @@ static void setaffinity(const pthread_t t, const runconfig *const rc,
 	}
 }
 
-static pthread_t runthread(void * (*const fnptr)(void *), const void *const arg,
-	char onerror[])
+static pthread_t runthread(void * (*const fnptr)(void *),
+	const void *const arg, char onerror[])
 {
 	pthread_t t;
 	if(pthread_create(&t, NULL, fnptr, (void *)arg) == 0) { } else
@@ -42,16 +42,17 @@ static pthread_t runthread(void * (*const fnptr)(void *), const void *const arg,
 	return t;
 }
 
-typedef struct
-{
-	treepreroutine tpr;
-	treeroutine tr;
-	const runconfig * rc;
-} treesetup;
+// typedef struct
+// {
+// 	treepreroutine tpr;
+// 	treeroutine tr;
+// 	const runconfig * rc;
+// } treesetup;
 
 typedef struct
 {
-	const treesetup * ts;	
+	const treeplugin *const tp;
+	const runconfig *const rc;
 	unsigned id;
 	void * parentarg;
 } threadargument;
@@ -60,28 +61,30 @@ static void * threadroutine(void * varg)
 {
 	const threadargument ta = *(threadargument *)varg;
 
-	void *const arg = ta.ts->tpr(ta.id, ta.ts->rc, ta.parentarg);
+	void *const arg = ta.tp->makeargument(ta.id, ta.rc, ta.parentarg);
 
 	pthread_t threads[2] = { -1, -1 };
 	const threadargument args[2] =
 	{
-		{ .ts = ta.ts, .id = 2 * ta.id + 1, .parentarg = arg },
-		{ .ts = ta.ts, .id = 2 * ta.id + 2, .parentarg = arg }
+		{ .tp = ta.tp, .rc = ta.rc,
+			.id = 2 * ta.id + 1, .parentarg = arg },
+
+		{ .tp = ta.tp, .rc = ta.rc,
+			.id = 2 * ta.id + 2, .parentarg = arg }
 	};
 
 	for(unsigned i = 0; i < 2; i += 1)
 	{
-		if(args[i].id < ta.ts->rc->nworkers)
+		if(args[i].id < ta.rc->nworkers)
 		{
 			char msg[64];
 			sprintf(msg, "can't start job %u", args[i].id);
 			threads[i] = runthread(threadroutine, &args[i], msg);
-			setaffinity(threads[i], ta.ts->rc, args[i].id);
+			setaffinity(threads[i], ta.rc, args[i].id);
 		}
 	}
 
-	ta.ts->tr(arg);
-	// free(arg);
+	ta.tp->treeroutine(arg);
 
 	for(unsigned i = 0; i < 2; i += 1)
 	{
@@ -92,22 +95,24 @@ static void * threadroutine(void * varg)
 		}
 	}
 
+	ta.tp->dropargument(arg);
+
 	return NULL;
 }
 
-void treespawn(const treepreroutine tpr, const treeroutine tr, 
-	const runconfig *const rc)
+void treespawn(const treeplugin *const tp, const runconfig *const rc)
 {
-	const treesetup ts = { .rc = rc, .tr = tr, .tpr = tpr };
 	const threadargument ta =
 	{
-		.ts = &ts,
+		.tp = tp,
+		.rc = rc,
 		.id = 0,
-		.parentarg = tpr(0, rc, NULL)
+		.parentarg = tp->makeargument(0, rc, NULL)
 	};
 
 	const pthread_t t = runthread(threadroutine, &ta, "can't run root job");
 	setaffinity(t, rc, 0);
 	joinsuccess(t);
+	tp->dropargument(ta.parentarg);
 	eprintf("thread tree DONE\n");
 }
