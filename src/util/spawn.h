@@ -13,4 +13,9 @@ typedef struct
 
 extern void treespawn(const treeplugin *const, const runconfig *const);
 
+extern void * makeidargument(const unsigned id, const runconfig *const rc,
+	const void *const parentarg);
+
+extern void dropidargument(void *const arg);
+
 #endif
