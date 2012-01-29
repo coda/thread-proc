@@ -1,9 +1,9 @@
 ubld = $(bld)/util
 
-usrc = config.c echotwo.c spawn.c procspawn.c cfgtest.c spawntest.c
+usrc = config.c echotwo.c tools.c spawn.c procspawn.c cfgtest.c spawntest.c
 
 uobj = $(call c2o,$(ubld),$(usrc))
-ucommon = $(call c2o,$(ubld),config.c echotwo.c spawn.c)
+ucommon = $(call c2o,$(ubld),config.c echotwo.c tools.c spawn.c)
 
 libutil: $(bld)/bin/cfgtest $(bld)/bin/procspawntest $(bld)/bin/threadspawntest
 

@@ -1,4 +1,4 @@
-#include <./worker.h>
+#include <./alloc/worker.h>
 #include <stdlib.h>
 #include <stdio.h>
 
@@ -114,9 +114,10 @@ static void dumpring(rnode* rn)
 		for(r = rn; r->next != rn; r = r->next)
 		{
 			fprintf(stderr, "N. %p: %p - %p\n",
-				r, r->prev, r->next);
+				(void *)r, (void *)r->prev, (void *)r->next);
 		}
-		fprintf(stderr, "N. %p: %p - %p\n", r, r->prev, r->next);
+		fprintf(stderr, "N. %p: %p - %p\n",
+			(void *)r, (void *)r->prev, (void *)r->next);
 
 	}
 	else
