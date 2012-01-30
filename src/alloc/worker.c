@@ -1,61 +1,35 @@
 #include <./alloc/worker.h>
+#include <./util/echotwo.h>
+
 #include <stdlib.h>
 #include <stdio.h>
 
-const unsigned nrings = 256;
-configuration cfg;
+const unsigned nrings = NRINGS;
 static const unsigned stepfactor = 1;
 
-void fillconfig(unsigned argc, char** argv)
-{
-	unsigned nw = 64;
-	unsigned ni = 10000;
-
-	if(argc > 1)
-	{
-		int i = atoi(argv[1]);
-//		ni = i > 0 ? i : 10000 * nw;
-		nw = i > 0 ? i : 64;
-	}
-
-	if(argc > 2)
-	{
-		int i = atoi(argv[2]);
-//		nw = i > 0 ? i : 64;
-		ni = i > 0 ? i : 10000 * nw;
-
-	}
-
-	cfg.nworkers = nw;
-	cfg.niterations = ni / nw;
-}
-
-static void freering(rnode* rn)
+static void freering(rnode *const rn)
 {
 	if(rn != NULL)
 	{
-		rnode* t;
-		rnode* r;
+		rnode * t;
+		rnode * r;
 		for(r = rn; (t = r->next) != rn; r = t)
 		{
-//			fprintf(stderr, "freeing node %p\n", r);
 			free(r);
 		}
-//		fprintf(stderr, "freeing node %p\n", r);
 		free(r);
 	}
 }
 
-void freerings(rnodeline rings[])
+void freerings(rnode * rings[])
 {
 	for(unsigned i = 0; i < nrings; i += 1)
 	{
-//		fprintf(stderr, "freeing ring %u\n", i);
-		freering(rings[i].r);
+		freering(rings[i]);
 	}
 }
 
-static int walknode(rnode **const rp, unsigned n)
+static void walknode(rnode **const rp, unsigned n)
 {
 	rnode* r = *rp;
 	
@@ -69,15 +43,11 @@ static int walknode(rnode **const rp, unsigned n)
 
 		*rp = r;
 	}
-
-	return 0;
 }
 
-static int freenode(rnode **const rp, unsigned n)
+static void freenode(rnode **const rp, unsigned n)
 {
 	rnode* r = *rp;
-
-//	fprintf(stderr, "freenode. r: %p\n", r);
 
 	if(r != NULL)
 	{
@@ -100,8 +70,6 @@ static int freenode(rnode **const rp, unsigned n)
 			free(r);
 		}
 	}
-
-	return 0;
 }
 
 static void dumpring(rnode* rn)
@@ -113,24 +81,23 @@ static void dumpring(rnode* rn)
 		rnode* r;
 		for(r = rn; r->next != rn; r = r->next)
 		{
-			fprintf(stderr, "N. %p: %p - %p\n",
+			eprintf("N. %p: %p - %p\n",
 				(void *)r, (void *)r->prev, (void *)r->next);
 		}
-		fprintf(stderr, "N. %p: %p - %p\n",
+		eprintf("N. %p: %p - %p\n",
 			(void *)r, (void *)r->prev, (void *)r->next);
 
 	}
 	else
 	{
-		fprintf(stderr, "NULL\n");
+		eprintf("NULL\n");
 	}
 }
 
-static int makenode(rnode **const rp, unsigned n)
+static void makenode(rnode **const rp, unsigned n)
 {
 	rnode* r = *rp;
 	rnode* t = malloc(n * 64);
-	int rv = 0;
 
 	if(t != NULL)
 	{
@@ -151,16 +118,13 @@ static int makenode(rnode **const rp, unsigned n)
 	}
 	else
 	{
-		rv = 1;
+		fail("can't make node");
 	}
 
-//	fprintf(stderr, "makenode. %d\n", rv);
 	dumpring(*rp);
-
-	return rv;
 }
 
-static int (*const operations[])(rnode**const, unsigned int) =
+static void (*const operations[])(rnode **const, unsigned int) =
 {
 	walknode,
 	makenode,
@@ -172,24 +136,18 @@ static int (*const operations[])(rnode**const, unsigned int) =
 	makenode
 };
 
-int worker(rnodeline rings[], unsigned id)
+void worker(const runconfig *const rc, rnode * rings[], const unsigned id)
 {
 	unsigned int rseed = id;
-	unsigned step = cfg.niterations;
-	int rv = 0;
-
-	while(rv == 0 && step)
+	
+	for(unsigned step = rc->size / rc->nworkers; step; step -= 1)
 	{
-		unsigned op = rand_r(&rseed)
-			% (sizeof(operations) / sizeof(void*));
-		unsigned r = rand_r(&rseed) % nrings;
-		unsigned param = 1 << (rand_r(&rseed) % 7 + 1);
+		const unsigned op =
+			rand_r(&rseed) % (sizeof(operations) / sizeof(void*));
 
-//		fprintf(stderr, "work %u; op: %u; r: %u\n", id, op, r);
+		const unsigned r = rand_r(&rseed) % nrings;
+		const unsigned param = 1 << (rand_r(&rseed) % 7 + 1);
 
-		rv = operations[op](&rings[r].r, param);
-		step -= 1;
+		operations[op](&rings[r], param);
 	}
-
-	return rv;
 }

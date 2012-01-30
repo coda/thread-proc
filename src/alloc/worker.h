@@ -1,36 +1,21 @@
 #ifndef workerhincluded
 #define workerhincluded
 
+#include <./util/config.h>
+
 typedef struct rnodetag
 {
 	struct rnodetag* next;
 	struct rnodetag* prev;
 } rnode;
 
-enum { cachelinelength = 64 };
-
-#define defpad(n, blk) ( \
-	(unsigned)(blk - n % blk) & ((unsigned)-1 + (n % blk == 0)) \
-)
-
-typedef struct
-{
-	rnode * r;
-	unsigned char padding[defpad(sizeof(rnode *), cachelinelength)];
-} rnodeline;
-
-extern int worker(rnodeline rings[], unsigned id);
-extern void freerings(rnodeline rings[]);
-
-typedef struct
-{
-	unsigned nworkers;
-	unsigned niterations;
-} configuration;
+#define NRINGS 256
 
 extern const unsigned nrings;
-extern configuration cfg;
 
-extern void fillconfig(unsigned argc, char** argv);
+extern void worker(const runconfig *const rc, rnode * rings[],
+	const unsigned id);
+
+extern void freerings(rnode * rings[]);
 
 #endif

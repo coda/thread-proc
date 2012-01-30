@@ -1,61 +1,31 @@
 #include <./alloc/worker.h>
+#include <./util/spawn.h>
+#include <./util/echotwo.h>
 
-#include <stdlib.h>
+#include <string.h>
 #include <stdio.h>
-#include <strings.h>
-#include <unistd.h>
-#include <sys/types.h>
-#include <sys/wait.h>
 
-int main(int argc, char** argv)
+static rnode * forkrings[NRINGS];
+
+static void routine(const void *const arg)
 {
-	fillconfig(argc, argv);
+	const idargument *const ia = (idargument *)arg;
+	worker(ia->rc, forkrings, ia->id);
+	printf("work %u is done\n", ia->id);
+}
 
-	fprintf(stderr, "nworkers: %u; niterations: %u; overall: %u\n",
-		cfg.nworkers, cfg.niterations,
-		cfg.nworkers * cfg.niterations);
+int main(const int argc, const char *const argv[])
+{
+	runconfig *const rc = formconfig(argc, argv, 64, 64 * 1024);
 
-	pid_t processes[cfg.nworkers];
+	const treeplugin tp = {
+		.makeargument = makeidargument,
+		.dropargument = dropidargument,
+		.treeroutine = routine };
 
-	rnodeline rings[nrings];
-	bzero(rings, nrings * sizeof(rnodeline));
+	treespawn(&tp, rc);
 
-	unsigned ok = 1;
-	unsigned i;
-	for(i = 0; ok && i < cfg.nworkers; i += 1)
-	{
-		pid_t p = fork();
-		if(p == 0)
-		{
-			int rv = worker(rings, i);
-			if(rv == 0)
-			{
-				fprintf(stderr, "work %u done\n", i);
-			}
-			else
-			{
-				fprintf(stderr, "work %u failed\n", i);
-			}
+	freeconfig(rc);
 
-			exit(0);
-		}
-		if(p > 0)
-		{
-			processes[i] = p;
-		}
-		else
-		{
-			ok = 0;
-		}
-	}
-
-	unsigned nactualwrk = i;
-	fprintf(stderr, "actual workers: %u\n", nactualwrk);
-
-	for(i = 0; i < nactualwrk; i += 1)
-	{
-		waitpid(processes[i], NULL, 0);
-	}
-	
 	return 0;
 }
