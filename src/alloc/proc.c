@@ -5,13 +5,15 @@
 #include <string.h>
 #include <stdio.h>
 
+#include <sched.h>
+
 static rnode * forkrings[NRINGS];
 
 static void routine(const void *const arg)
 {
 	const idargument *const ia = (idargument *)arg;
 	worker(ia->rc, forkrings, ia->id);
-	printf("work %u is done\n", ia->id);
+	printf("work %u is done on core %d\n", ia->id, sched_getcpu());
 }
 
 int main(const int argc, const char *const argv[])

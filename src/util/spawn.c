@@ -7,8 +7,11 @@ void * makeidargument(const unsigned id, const runconfig *const rc,
 	const void *const parentarg)
 {
 	idargument *const ia = malloc(sizeof(idargument));
+
 	if(ia)
 	{
+		ia->id = id;
+		ia->rc = rc;
 	}
 	else
 	{

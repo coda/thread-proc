@@ -3,15 +3,21 @@
 
 #include <./util/config.h>
 
-typedef struct
+typedef struct treeplugintag
 {
-	void * (* makeargument)(const unsigned id, const runconfig *const rc,
+	void * (* makeargument)(
+		const struct treeplugintag *const tp,
+		const unsigned id,
 		const void *const parentarg);
+
 	void (* dropargument)(void *const arg);
 	void (* treeroutine)(const void *const arg);
+
+	const runconfig *const rc;
+	void * extra;
 } treeplugin;
 
-extern void treespawn(const treeplugin *const, const runconfig *const);
+extern void treespawn(const treeplugin *const);
 
 typedef struct
 {
@@ -19,7 +25,9 @@ typedef struct
 	const runconfig * rc;
 } idargument;
 
-extern void * makeidargument(const unsigned id, const runconfig *const rc,
+extern void * makeidargument(
+	const treeplugin *const tp,
+	const unsigned id,
 	const void *const parentarg);
 
 extern void dropidargument(void *const arg);

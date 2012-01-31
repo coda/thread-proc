@@ -5,40 +5,34 @@
 #include <string.h>
 #include <stdio.h>
 
-#ifdef PROC
-static rnode * rings[rnode];
-#endif
+#include <sched.h>
 
 static void routine(const void *const arg)
 {
 	const idargument *const ia = (idargument *)arg;
 
-#ifndef PROC
+//	eprintf("work %u is here\n", ia->id);
+
 	rnode * rings[nrings];
 	bzero(rings, sizeof(rings));
-#endif
 
 	worker(ia->rc, rings, ia->id);
 
-#ifndef PROC
 	freerings(rings);
-#endif
 
-	printf("work %u is done\n", ia->id);
+	printf("work %u is done on core %d\n", ia->id, sched_getcpu());
 }
 
 int main(const int argc, const char *const argv[])
 {
-	runconfig *const rc = formconfig(argc, argv, 64, 64 * 1024);
-
 	const treeplugin tp = {
 		.makeargument = makeidargument,
 		.dropargument = dropidargument,
-		.treeroutine = routine };
+		.treeroutine = routine,
+		rc = formconfig(argc, argv, 64, 64 * 1024) };
 
-	treespawn(&tp, rc);
-
-	freeconfig(rc);
+	treespawn(&tp);
+	freeconfig(tp.rc);
 
 	return 0;
 }
