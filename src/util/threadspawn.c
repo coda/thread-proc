@@ -35,24 +35,15 @@ static pthread_t runthread(void * (*const fnptr)(void *),
 	pthread_t t;
 	if(pthread_create(&t, NULL, fnptr, (void *)arg) == 0) { } else
 	{
-//		fail("can't run thread for job %u", args[i].id);
 		fail(onerror);
 	}
 
 	return t;
 }
 
-// typedef struct
-// {
-// 	treepreroutine tpr;
-// 	treeroutine tr;
-// 	const runconfig * rc;
-// } treesetup;
-
 typedef struct
 {
 	const treeplugin *const tp;
-	const runconfig *const rc;
 	unsigned id;
 	void * parentarg;
 } threadargument;
@@ -60,27 +51,25 @@ typedef struct
 static void * threadroutine(void * varg)
 {
 	const threadargument ta = *(threadargument *)varg;
+	const runconfig *const rc = ta.tp->rc;
 
-	void *const arg = ta.tp->makeargument(ta.id, ta.rc, ta.parentarg);
+	void *const arg = ta.tp->makeargument(ta.tp, ta.id, ta.parentarg);
 
 	pthread_t threads[2] = { -1, -1 };
 	const threadargument args[2] =
 	{
-		{ .tp = ta.tp, .rc = ta.rc,
-			.id = 2 * ta.id + 1, .parentarg = arg },
-
-		{ .tp = ta.tp, .rc = ta.rc,
-			.id = 2 * ta.id + 2, .parentarg = arg }
+		{ .tp = ta.tp, .id = 2 * ta.id + 1, .parentarg = arg },
+		{ .tp = ta.tp, .id = 2 * ta.id + 2, .parentarg = arg }
 	};
 
 	for(unsigned i = 0; i < 2; i += 1)
 	{
-		if(args[i].id < ta.rc->nworkers)
+		if(args[i].id < rc->nworkers)
 		{
 			char msg[64];
 			sprintf(msg, "can't start job %u", args[i].id);
 			threads[i] = runthread(threadroutine, &args[i], msg);
-			setaffinity(threads[i], ta.rc, args[i].id);
+			setaffinity(threads[i], rc, args[i].id);
 		}
 	}
 
@@ -90,7 +79,6 @@ static void * threadroutine(void * varg)
 	{
 		if(threads[i] != -1)
 		{
-//			eprintf("joining %x\n", threads[i]);
 			joinsuccess(threads[i]);
 		}
 	}
@@ -100,19 +88,16 @@ static void * threadroutine(void * varg)
 	return NULL;
 }
 
-void treespawn(const treeplugin *const tp, const runconfig *const rc)
+void treespawn(const treeplugin *const tp)
 {
-	const threadargument ta =
-	{
+	const threadargument ta = {
 		.tp = tp,
-		.rc = rc,
 		.id = 0,
-		.parentarg = tp->makeargument(0, rc, NULL)
-	};
+		.parentarg = tp->makeargument(tp, 0, NULL) };
 
 	const pthread_t t = runthread(threadroutine, &ta, "can't run root job");
-	setaffinity(t, rc, 0);
+	setaffinity(t, ta.tp->rc, 0);
 	joinsuccess(t);
 	tp->dropargument(ta.parentarg);
-	eprintf("thread tree DONE\n");
+	printf("thread tree DONE\n");
 }

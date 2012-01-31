@@ -13,21 +13,20 @@ static void routine(const void *const arg)
 {
 	const idargument *const ia = (idargument *)arg;
 	worker(ia->rc, forkrings, ia->id);
-	printf("work %u is done on core %d\n", ia->id, sched_getcpu());
+	printf("work %03u is done on core %d\n", ia->id, sched_getcpu());
 }
 
 int main(const int argc, const char *const argv[])
 {
-	runconfig *const rc = formconfig(argc, argv, 64, 64 * 1024);
-
 	const treeplugin tp = {
 		.makeargument = makeidargument,
 		.dropargument = dropidargument,
-		.treeroutine = routine };
+		.treeroutine = routine,
+		.extra = NULL,
+		.rc = formconfig(argc, argv, 64, 64 * 1024) };
 
-	treespawn(&tp, rc);
-
-	freeconfig(rc);
+	treespawn(&tp);
+	freeconfig((runconfig *)tp.rc);
 
 	return 0;
 }

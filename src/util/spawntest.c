@@ -13,7 +13,9 @@ typedef struct
 	unsigned id;
 } arguments;
 
-static void * makeargument(const unsigned id, const runconfig *const rc,
+static void * makeargument(
+	const treeplugin *const tp,
+	const unsigned id,
 	const void *const prevarg)
 {
 	arguments *const arg = malloc(sizeof(arguments));
@@ -40,16 +42,17 @@ static void routine(const void *const argptr)
 	printf("routine %04u is done on core %d\n", arg->id, sched_getcpu());
 }
 
-
 int main(const int argc, const char *const argv[])
 {
-	const runconfig *const rc = formconfig(argc, argv, 64, 2048);
-	const treeplugin tp =
-		{ .makeargument = makeargument,
-			.dropargument = freeargument, .treeroutine = routine };
+	const treeplugin tp = {
+		.makeargument = makeargument,
+		.dropargument = freeargument,
+		.treeroutine = routine,
+		.extra = NULL, 
+		.rc = formconfig(argc, argv, 64, 2048) };
 
-	treespawn(&tp, rc);
+	treespawn(&tp);
+	freeconfig((runconfig *)tp.rc);
 
-	freeconfig((runconfig *)rc);
 	return 0;
 }

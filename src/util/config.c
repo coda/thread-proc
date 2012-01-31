@@ -11,7 +11,7 @@ static runconfig * allocforncores(void)
 {
 	const unsigned ncoresmax = 128;
 	const unsigned cslen = CPU_ALLOC_SIZE(ncoresmax);
-	eprintf("assuming no more than %u cores. set length = %u\n",
+	printf("assuming no more than %u cores. set length = %u\n",
 		ncoresmax, cslen);
 
 	cpu_set_t * coreset = CPU_ALLOC(ncoresmax);
@@ -28,11 +28,6 @@ static runconfig * allocforncores(void)
 		fail("don't know how to work on 0 cores\n");
 	}
 
-// 	eprintf("ncores %u\n", ncores);
-// 	eprintf("allocation. sizeof(runconfig) = %u; overall = %u\n",
-// 		sizeof(runconfig),
-// 		sizeof(runconfig) + sizeof(unsigned) * (ncores - 1));
- 
 	runconfig *const cfg =
 		malloc(sizeof(runconfig)
 			+ sizeof(unsigned) * (ncores - 1));
@@ -49,18 +44,12 @@ static runconfig * allocforncores(void)
 	{
 		if(CPU_ISSET_S(i, cslen, coreset))
 		{
-// 			eprintf("core %u found. current %u at offset %u\n",
-// 				i, cc,
-// 				(char *)&cfg->corelist[cc] - (char *)cfg);
-
 			cfg->corelist[cc] = i;
 			cc += 1;
 		}
 	}
 
 	free(coreset);
-
-//	eprintf("DONE. cfg = %p\n", cfg);
 
 	return cfg;
 }
@@ -81,8 +70,6 @@ static void configpagelen(runconfig *const cfg,
 
 	unsigned flags = 0;
 	unsigned plen = sysplen;
-
-//	eprintf("argc: %u. argv: %s\n", argc, argv[3]);
 
 	if(argc > 3)
 	{
@@ -107,8 +94,6 @@ runconfig * formconfig(const int argc, const char *const argv[],
 {
 	runconfig *const cfg = allocforncores();
 
-//	eprintf("alloc DONE\n"); fflush(stderr);
-
 	configpagelen(cfg, argc, argv);
 
 	cfg->nworkers = defnw;
@@ -126,7 +111,7 @@ runconfig * formconfig(const int argc, const char *const argv[],
 		cfg->size = i;
 	}
 
-	eprintf("configured"
+	printf("configured"
 		"\n\tworkers: %u"
 		"\n\tsize: %u"
 		"\n\tsz/wrk: %u"
@@ -138,10 +123,10 @@ runconfig * formconfig(const int argc, const char *const argv[],
 
 	for(unsigned i = 0; i < cfg->ncores; i += 1)
 	{
-		eprintf(" %u", cfg->corelist[i]);
+		printf(" %u", cfg->corelist[i]);
 	}
 
-	eprintf("\n");
+	printf("\n");
 
 	return cfg;
 }

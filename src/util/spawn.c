@@ -3,7 +3,9 @@
 
 #include <stdlib.h>
 
-void * makeidargument(const unsigned id, const runconfig *const rc,
+void * makeidargument(
+	const treeplugin *const tp,
+	const unsigned id, 
 	const void *const parentarg)
 {
 	idargument *const ia = malloc(sizeof(idargument));
@@ -11,7 +13,7 @@ void * makeidargument(const unsigned id, const runconfig *const rc,
 	if(ia)
 	{
 		ia->id = id;
-		ia->rc = rc;
+		ia->rc = tp->rc;
 	}
 	else
 	{

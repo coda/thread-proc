@@ -66,18 +66,22 @@ static pid_t forkf(char onerror[])
 	return p;
 }
 
-static void runnode(const treeplugin *const tp,
-	const unsigned id, const runconfig *const rc, void *const parentarg);
+static void runnode(
+	const treeplugin *const tp,
+	const unsigned id,
+	void *const parentarg);
 
-void treespawn(const treeplugin *const tp, const runconfig *const rc)
+void treespawn(const treeplugin *const tp)
 {
 	pid_t p = forkf("can't fork proc tree root");
+
+	const runconfig *const rc = tp->rc;
 
 	if(p > 0)
 	{
 		setaffinity(p, rc, 0);
 		waitsuccess(p);
-		eprintf("proc tree DONE\n");
+		printf("proc tree DONE\n");
 	}
 	else
 	{
@@ -91,15 +95,19 @@ void treespawn(const treeplugin *const tp, const runconfig *const rc)
 			fail("can't set exit on fail handler");
 		}
 
-		runnode(tp, 0, rc, NULL);
+		runnode(tp, 0, NULL);
 		exit(0);
 	}
 }
 
-static void runnode(const treeplugin *const tp,
-	const unsigned id, const runconfig *const rc, void *const parentarg)
+static void runnode(
+	const treeplugin *const tp,
+	const unsigned id,
+	void *const parentarg)
 {
-	void *const arg = tp->makeargument(id, rc, parentarg);
+	const runconfig *const rc = tp->rc;
+
+	void *const arg = tp->makeargument(tp, id, parentarg);
 	tp->dropargument(parentarg);
 
 	pid_t pids[2] = { -1, -1 };
@@ -121,7 +129,7 @@ static void runnode(const treeplugin *const tp,
 			}
 			else
 			{
-				runnode(tp, ids[i], rc, arg);
+				runnode(tp, ids[i], arg);
 				exit(0);
 			}
 		}

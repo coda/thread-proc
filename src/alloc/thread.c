@@ -11,8 +11,6 @@ static void routine(const void *const arg)
 {
 	const idargument *const ia = (idargument *)arg;
 
-//	eprintf("work %u is here\n", ia->id);
-
 	rnode * rings[nrings];
 	bzero(rings, sizeof(rings));
 
@@ -20,7 +18,7 @@ static void routine(const void *const arg)
 
 	freerings(rings);
 
-	printf("work %u is done on core %d\n", ia->id, sched_getcpu());
+	printf("work %03u is done on core %d\n", ia->id, sched_getcpu());
 }
 
 int main(const int argc, const char *const argv[])
@@ -29,10 +27,11 @@ int main(const int argc, const char *const argv[])
 		.makeargument = makeidargument,
 		.dropargument = dropidargument,
 		.treeroutine = routine,
-		rc = formconfig(argc, argv, 64, 64 * 1024) };
+		.extra = NULL,
+		.rc = formconfig(argc, argv, 64, 64 * 1024) };
 
 	treespawn(&tp);
-	freeconfig(tp.rc);
+	freeconfig((runconfig *)tp.rc);
 
 	return 0;
 }
