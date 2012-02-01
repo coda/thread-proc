@@ -14,7 +14,7 @@ static void routine(const void *const arg)
 	rnode * rings[nrings];
 	bzero(rings, sizeof(rings));
 
-	worker(ia->rc, rings, ia->id);
+	worker(ia->tp->rc, rings, ia->id);
 
 	freerings(rings);
 

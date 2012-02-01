@@ -13,7 +13,7 @@ void * makeidargument(
 	if(ia)
 	{
 		ia->id = id;
-		ia->rc = tp->rc;
+		ia->tp = tp;
 	}
 	else
 	{

@@ -1,40 +1,27 @@
-mmbld = $(bld)/matmul
+mbld = $(bld)/matmul
+msrc = naivemul.c tilemul.c muljob.c util.c thread.c proc.c proconfs.c
+mobj = $(call c2o,$(mbld),$(msrc))
+# mbin = $(addprefix $(bld)/bin/,mnt mtt mnp mtp mnpf mtpf)
+mbin = $(addprefix $(bld)/bin/,mnt mtt)
 
-mmsrc = \
-	naivemul.c \
-	tilemul.c \
-	util.c \
-	thrd.c \
-	proc.c \
-	proconfs.c
+mpcommon = $(ucommon) $(ubld)/procspawn.o
+mtcommon = $(ucommon) $(ubld)/threadspawn.o
 
-naive = $(call c2o, $(mmbld), util.c naivemul.c)
-tile = $(call c2o, $(mmbld), util.c tilemul.c)
+# naive = $(call c2o, $(mbld),util.c naivemul.c)
+# tile = $(call c2o, $(mbld),util.c tilemul.c)
 
-matmul: $(addprefix $(bld)/bin/, mnt mtt mnp mtp mnpf mtpf)
+naive = $(call c2o,$(mbld),naivemul.c muljob.c)
+tile = $(call c2o,$(mbld),tilemul.c muljob.c)
 
-$(bld)/bin/mnt: $(mmbld)/thrd.o $(naive)
-# 	@ echo -e '\tlnk\t$@' \
-# 	&& $(lnk) $(lflags) $^ -pthread -o $@
+matmul: $(mbin)
+
+$(bld)/bin/mnt: $(mbld)/thread.o $(naive) $(mtcommon)
+$(bld)/bin/mtt: $(mbld)/thread.o $(tile) $(mtcommon)
  
-$(bld)/bin/mtt: $(mmbld)/thrd.o $(tile)
-# 	@ echo -e '\tlnk\t$@' \
-# 	&& $(lnk) $(lflags) $^ -pthread -o $@
+$(bld)/bin/mnp: $(mbld)/proc.o $(naive)
+$(bld)/bin/mtp: $(mbld)/proc.o $(tile)
  
-$(bld)/bin/mnp: $(mmbld)/proc.o $(naive)
-# 	@ echo -e '\tlnk\t$@' \
-# 	&& $(lnk) $(lflags) $^ -o $@
- 	
-$(bld)/bin/mtp: $(mmbld)/proc.o $(tile)
-# 	@ echo -e '\tlnk\t$@' \
-# 	&& $(lnk) $(lflags) $^ -o $@
- 
-$(bld)/bin/mnpf: $(mmbld)/proconfs.o $(naive)
-# 	@ echo -e '\tlnk\t$@' \
-# 	&& $(lnk) $(lflags) $^ -lrt -o $@
- 
-$(bld)/bin/mtpf: $(mmbld)/proconfs.o $(tile)
-# 	@ echo -e '\tlnk\t$@' \
-# 	&& $(lnk) $(lflags) $^ -lrt -o $@
+$(bld)/bin/mnpf: $(mbld)/proconfs.o $(naive)
+$(bld)/bin/mtpf: $(mbld)/proconfs.o $(tile)
 
-include $(call o2d, $(call c2o, $(mmbld), $(mmsrc)))
+include $(call o2d,$(mobj))

@@ -5,6 +5,7 @@ lflags += -pthread -lrt
 
 all: matmul alloc util
 
-include matmul/gnu.mk
 include util/gnu.mk
 include alloc/gnu.mk
+include matmul/gnu.mk
+

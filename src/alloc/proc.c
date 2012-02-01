@@ -7,12 +7,12 @@
 
 #include <sched.h>
 
-static rnode * forkrings[NRINGS];
+static rnode * rings[NRINGS];
 
 static void routine(const void *const arg)
 {
 	const idargument *const ia = (idargument *)arg;
-	worker(ia->rc, forkrings, ia->id);
+	worker(ia->tp->rc, rings, ia->id);
 	printf("work %03u is done on core %d\n", ia->id, sched_getcpu());
 }
 

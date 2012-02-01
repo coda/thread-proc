@@ -22,7 +22,7 @@ extern void treespawn(const treeplugin *const);
 typedef struct
 {
 	unsigned id;
-	const runconfig * rc;
+	const treeplugin * tp;
 } idargument;
 
 extern void * makeidargument(
