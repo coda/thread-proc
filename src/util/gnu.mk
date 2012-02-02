@@ -9,6 +9,8 @@ util: $(ubin)
 
 $(bld)/bin/cfgtest: $(ubld)/cfgtest.o $(ucommon)
 $(bld)/bin/procspawntest: $(ubld)/spawntest.o $(ubld)/procspawn.o $(ucommon)
+
+$(bld)/bin/threadspawntest: lflags += -pthread
 $(bld)/bin/threadspawntest: $(ubld)/spawntest.o $(ubld)/threadspawn.o $(ucommon)
 
 include $(call o2d, $(uobj))

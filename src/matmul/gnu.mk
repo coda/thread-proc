@@ -15,6 +15,8 @@ tile = $(call c2o,$(mbld),tilemul.c muljob.c)
 
 matmul: $(mbin)
 
+$(bld)/bin/mnt \
+$(bld)/bin/mtt: lflags += -pthread
 $(bld)/bin/mnt: $(mbld)/thread.o $(naive) $(mtcommon)
 $(bld)/bin/mtt: $(mbld)/thread.o $(tile) $(mtcommon)
  

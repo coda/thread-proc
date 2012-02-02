@@ -10,6 +10,7 @@ typedef struct
 	unsigned baseoffset;
 	unsigned baserow;
 	unsigned nrows;
+	unsigned absolutebaserow;
 } joblayout;
 
 extern joblayout definejob(

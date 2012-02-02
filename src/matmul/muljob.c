@@ -76,5 +76,6 @@ joblayout definejob(
 
 	return (joblayout){
 		.nrows = nrows, .baserow = baserow, .baseoffset = baseoffset,
-		.mapoffset = mapoffset, .maplength = maplength };
+		.mapoffset = mapoffset, .maplength = maplength,
+		.absolutebaserow = ji.startrow };
 }

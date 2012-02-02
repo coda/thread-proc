@@ -66,8 +66,8 @@ static void randroutine(const void *const arg)
 	eltype *const a = ws->a + al.baseoffset / sizeof(eltype);
 	eltype *const b = ws->b + bl.baseoffset / sizeof(eltype);
 
-	matrand(id, a, al.baserow, al.nrows, m, tilecols);
-	matrand(id * 5, b, bl.baserow, bl.nrows, n, tilerows); 
+	matrand(id, al.absolutebaserow, a, al.baserow, al.nrows, m, tc);
+	matrand(id * 5, al.absolutebaserow, b, bl.baserow, bl.nrows, n, tr); 
 
 	printf("rand %u with %u rows is done on core %d\n", id, al.nrows,
 		sched_getcpu());
@@ -122,25 +122,16 @@ int main(const int argc, const char *const argv[])
 	tp.treeroutine = multroutine;
 	treespawn(&tp);
 
-	free(a);
-	free(b);
-
 	printf("some values\n");
 
- 	const unsigned tr = tilerows;
- 	const unsigned m = sz;
+	const unsigned tr = tilerows;
+	const unsigned tc = tilecols;
 
-	for(unsigned i = 237; i < 237 + 8; i += 1)
-	{
-		printf("\t");
-		for(unsigned j = 15; j < 15 + 8; j += 1)
-		{
-			printf("%f ", (double)matat(r, m, i, j, tr, tr));
-		}
-		printf("\n");
-	}
-
+	matdump(a, sz, sz, tr, tc, 0, 0, 9, 9);
+	
 	free(r);
+	free(b);
+	free(a);
 
 	return 0;
 }

@@ -2,6 +2,7 @@
 #include <matmul/util.h>
 
 #include <stdlib.h>
+#include <stdio.h>
 
 void matmul(
 	const eltype araw[],
@@ -15,7 +16,6 @@ void matmul(
 	const unsigned tc = tilecols;
 	const unsigned tr = tilerows;
 
-//	if(l % tr || m % tc || n % tr) l may not be aligned
 	if(m % tc || n % tr)
 	{
 		fail("won't  multiply. m: %u; n: %u are not aligned "
@@ -60,6 +60,7 @@ void matmul(
 
 void matrand(
 	unsigned seed,
+	unsigned abr,
 	eltype *const araw,
 	const unsigned baserow,
 	const unsigned l,
@@ -68,44 +69,72 @@ void matrand(
 {
 	if(m % tc)
 	{
-		eprintf("won't randomize. m: %u is not aligned on tc: %u\n",
+		fail("won't randomize. m: %u is not aligned on tc: %u\n",
 			m, tc);
-
-		return;
 	}
 
-	const unsigned tr = tilesize / (sizeof(eltype) * tc);
+	const unsigned tr = tilecount / tc;
+
 	eltype (*const a)[m / tc][tr][tc] =
 		(eltype (*const)[m / tc][tr][tc])araw;
+
+ 	eprintf("randomizing for: a: %p; baserow: %u; l: %u; m: %u; "
+		"tr: %u; tc: %u\n",
+		a, baserow, l, m, tr, tc);
 
 	for(unsigned i = baserow; i < baserow + l; i += 1)
 	for(unsigned j = 0; j < m; j += 1)
 	{
-		a[i / tr][j / tc][i % tr][j % tc]
-			= 1.0 / (double)((rand_r(&seed) >> 24) + 1);
-//		a[i / tr][j / tc][i % tr][j % tc] = (double)i;
+// 		a[i / tr][j / tc][i % tr][j % tc]
+// 			= 1.0 / (double)((rand_r(&seed) >> 24) + 1);
+
+		a[i / tr][j / tc][i % tr][j % tc] = (double)(i + abr == j);
 	}
 }
 
-eltype matat(
+static eltype matat(
 	const eltype araw[],
-	const unsigned m,
+	const unsigned n,
 	const unsigned i,
 	const unsigned j,
 	const unsigned tr,
 	const unsigned tc)
 {
-	if(m % tc)
-	{
-		eprintf("won't read element. m: %u is not aligned on tc: %u\n",
-			m, tc);
+	const eltype (*const a)[n/tc][tr][tc]
+		= (const eltype (*const)[n/tc][tr][tc])araw;
 
-		return 0;
+	return a[i/tr][j/tc][i%tr][j%tc];
+}
+
+void matdump(
+	const eltype araw[],
+	const unsigned m,
+	const unsigned n,
+	const unsigned tr,
+	const unsigned tc,
+	const unsigned rbase,
+	const unsigned cbase,
+	const unsigned rlen,
+	const unsigned clen)
+{
+	if(rbase + rlen < m && cbase + clen < n) { } else
+	{
+		fail("wrong rbl: (%u;%u) or cbl (%u;%u) for (%u;%u) matrix",
+			rbase, rlen, cbase, clen, m, n);
 	}
 
-//	const unsigned tr = tilesize / (sizeof(eltype) * tc);
-	const eltype (*const a)[m / tc][tr][tc]
-		= (const eltype (*const)[m / tc][tr][tc])araw;
+	if(n % tc == 0) { } else
+	{
+		fail("will not work with n: %u not aligned on tc: %u", n, tc);
+	}
 
-	return a[i / tr][j / tc][i % tr][j % tc];
+	for(unsigned i = rbase; i < rbase + rlen; i += 1)
+	{
+//		printf("\t");
+		for(unsigned j = cbase; j < cbase + clen; j += 1)
+		{
+			printf("%f ", (double)matat(araw, n, i, j, tr, tr));
+		}
+		printf("\n");
+	}
 }
