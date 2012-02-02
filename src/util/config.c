@@ -1,5 +1,5 @@
-#include <./util/config.h>
-#include <./util/echotwo.h>
+#include <util/config.h>
+#include <util/echotwo.h>
 
 #include <stdlib.h>
 #include <stdio.h>

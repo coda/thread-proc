@@ -78,17 +78,17 @@ void matrand(
 	eltype (*const a)[m / tc][tr][tc] =
 		(eltype (*const)[m / tc][tr][tc])araw;
 
- 	eprintf("randomizing for: a: %p; baserow: %u; l: %u; m: %u; "
-		"tr: %u; tc: %u\n",
-		a, baserow, l, m, tr, tc);
+//  	eprintf("randomizing for: a: %p; baserow: %u; l: %u; m: %u; "
+// 		"tr: %u; tc: %u\n",
+// 		a, baserow, l, m, tr, tc);
 
 	for(unsigned i = baserow; i < baserow + l; i += 1)
 	for(unsigned j = 0; j < m; j += 1)
 	{
-// 		a[i / tr][j / tc][i % tr][j % tc]
-// 			= 1.0 / (double)((rand_r(&seed) >> 24) + 1);
+		a[i/tr][j/tc][i % tr][j % tc]
+			= 1.0 / (double)((rand_r(&seed) >> 24) + 1);
 
-		a[i / tr][j / tc][i % tr][j % tc] = (double)(i + abr == j);
+//		a[i/tr][j/tc][i%tr][j%tc] = (double)(i + abr == j);
 	}
 }
 
@@ -133,7 +133,7 @@ void matdump(
 //		printf("\t");
 		for(unsigned j = cbase; j < cbase + clen; j += 1)
 		{
-			printf("%f ", (double)matat(araw, n, i, j, tr, tr));
+			printf("%f ", (double)matat(araw, n, i, j, tr, tc));
 		}
 		printf("\n");
 	}

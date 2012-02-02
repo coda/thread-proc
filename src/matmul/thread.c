@@ -67,7 +67,7 @@ static void randroutine(const void *const arg)
 	eltype *const b = ws->b + bl.baseoffset / sizeof(eltype);
 
 	matrand(id, al.absolutebaserow, a, al.baserow, al.nrows, m, tc);
-	matrand(id * 5, al.absolutebaserow, b, bl.baserow, bl.nrows, n, tr); 
+	matrand(id * 5, bl.absolutebaserow, b, bl.baserow, bl.nrows, n, tr); 
 
 	printf("rand %u with %u rows is done on core %d\n", id, al.nrows,
 		sched_getcpu());
@@ -89,10 +89,11 @@ int main(const int argc, const char *const argv[])
 {
 	const runconfig *const rc = formconfig(argc, argv, 64, 1024);
 	const unsigned sz = rc->size;
-	if(sz >= 512) { } else
-	{
-		fail("problem size %u is too small", sz);
-	}
+
+// 	if(sz >= 512) { } else
+// 	{
+// 		fail("problem size %u is too small", sz);
+// 	}
 
 	printf("\tmatrix size: %fMiB\n",
 		(double)sz * sz * sizeof(eltype) / (double)(1 << 20));
@@ -125,9 +126,14 @@ int main(const int argc, const char *const argv[])
 	printf("some values\n");
 
 	const unsigned tr = tilerows;
-	const unsigned tc = tilecols;
+//	const unsigned tc = tilecols;
 
-	matdump(a, sz, sz, tr, tc, 0, 0, 9, 9);
+// 	matdump(a, sz, sz, tr, tc, 273, 273, 8, 8);
+// 	printf("\n");
+// 	matdump(b, sz, sz, tc, tr, 237, 237, 8, 8);
+// 	printf("\n");
+
+	matdump(r, sz, sz, tr, tr, 127, 237, 8, 8);
 	
 	free(r);
 	free(b);
