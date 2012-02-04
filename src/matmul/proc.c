@@ -1,232 +1,141 @@
 #include <matmul/mul.h>
-#include <matmul/util.h>
+#include <matmul/muljob.h>
+#include <util/config.h>
+#include <util/spawn.h>
+#include <util/echotwo.h>
+#include <util/memmap.h>
 
-#include <stdio.h>
-#include <string.h>
 #include <stdlib.h>
+#include <stdio.h>
 
-#include <errno.h>
-#include <unistd.h>
+#include <sched.h>
 
-#include <sys/wait.h>
-#include <sys/mman.h>
-#include <linux/mman.h>
-#include <sys/shm.h>
-
-static struct
+typedef struct
 {
 	eltype * a;
 	eltype * b;
 	eltype * r;
+} workset;
 
- 	testconfig cfg;
-} setup;
-
-
-static void runjobs(const unsigned count, void (* routine)(const unsigned))
+static void multroutine(const void *const arg)
 {
-	pid_t procs[count];
-	unsigned ok = 1;
+	const idargument *const ia = (idargument *)arg;
+	const workset *const ws = ia->tp->extra;
+	const runconfig *const rc = ia->tp->rc;
 	
-	for(unsigned i = 0; ok && i < count; i += 1)
-	{
-		pid_t p = fork();
-		if(p == 0)
-		{
-			routine(i);
-			exit(0);
-		}
-		if(p > 0)
-		{
-			procs[i] = p;
-		}
-		else
-		{
-			ok = 0;
-		}
-	}
-
-	if(ok) {} else
-	{
-		eprintf("err: %s. can't start %u jobs\n",
-			strerror(errno), count);
-		exit(1);
-	}
-
-	for(unsigned i = 0; ok && i < count; i += 1)
-	{
-		int status;
-		pid_t p = waitpid(procs[i], &status, 0);
-		ok = p == procs[i]
-			&& WIFEXITED(status)
-			&& WEXITSTATUS(status) == 0;
-	}
-
-	if(ok) {} else
-	{
-		eprintf("err: %s. can't join %u jobs\n",
-			strerror(errno), count);
-		exit(1);
-	}
-}
-
-static void randroutine(const unsigned id)
-{
-	const unsigned sz = setup.cfg.size;
-//	const unsigned nwrks = setup.cfg.nworkers; 
+	const unsigned id = ia->id;
+	const unsigned sz = rc->size;
 
 	const unsigned l = sz;
 	const unsigned m = sz;
 	const unsigned n = sz;
 
-// 	const jobitem ji = ballance(id, nwrks, sz);
-// 	const unsigned l = ji.nrows;
-// //	const unsigned sr = ji.startrow;
-// 
-// 	const unsigned sr = aligndown(ji.startrow, tilerows);
-// 	const unsigned baserow = ji.startrow - sr;
-// 	
-// 	eltype *const a = setup.a + sr * m;
-// 	eltype *const b = setup.b + sr * n;
-// 
-// 	matrand(id, a, baserow, l, m, tilecols);
-// 	matrand(id * 5, b, baserow, l, n, tilerows);
-
 	const unsigned tr = tilerows;
 	const unsigned tc = tilecols;
 
-	const joblayout al = definejob(&setup.cfg, id, l, m, tr, tc);
-	const joblayout bl = definejob(&setup.cfg, id, m, n, tc, tr);
+	const joblayout al = definejob(rc, id, l, m, tr, tc);
+	const joblayout rl = definejob(rc, id, l, n, tr, tr);
 
-	eltype *const a = setup.a + al.baseoffset / sizeof(eltype);
-	eltype *const b = setup.b + bl.baseoffset / sizeof(eltype);
+	const eltype *const a = ws->a + al.baseoffset / sizeof(eltype);
+	eltype *const r = ws->r + rl.baseoffset / sizeof(eltype);
 
-	matrand(id, a, al.baserow, al.nrows, m, tilecols);
-	matrand(id * 5, b, bl.baserow, bl.nrows, n, tilerows);
+	matmul(a, ws->b, al.baserow, al.nrows, m, n, r);
 
-	printf("rand %u with %u rows is done\n", id, l);
+	printf("mult %u with %u rows is done on core %d\n", id, al.nrows,
+		sched_getcpu());
 }
 
-static void multroutine(const unsigned id)
+static void randroutine(const void *const arg)
 {
-	const unsigned sz = setup.cfg.size;
-//	const unsigned nwrks = setup.cfg.nworkers; 
+	const idargument *const ia = (idargument *)arg;
+	const workset *const ws = ia->tp->extra;
+	const runconfig *const rc = ia->tp->rc;
+	
+	const unsigned id = ia->id;
+	const unsigned sz = rc->size;
 
 	const unsigned l = sz;
 	const unsigned m = sz;
 	const unsigned n = sz;
 
-// 	const jobitem ji = ballance(id, nwrks, sz);
-// 	const unsigned l = ji.nrows;
-// //	const unsigned sr = ji.startrow;
-// 
-// 	const unsigned sr = aligndown(ji.startrow, tilerows);
-// 	const unsigned baserow = ji.startrow - sr;
-// 	
-// 	const eltype *const a = setup.a + sr * m;
-// 	eltype *const r = setup.r + sr * n;
-// 
-// 	matmul(a, setup.b, baserow, l, m, n, r);
-
 	const unsigned tr = tilerows;
 	const unsigned tc = tilecols;
 
-	const joblayout al = definejob(&setup.cfg, id, l, m, tr, tc);
-	const joblayout rl = definejob(&setup.cfg, id, l, n, tr, tr);
+	const joblayout al = definejob(rc, id, l, m, tr, tc);
+	const joblayout bl = definejob(rc, id, m, n, tc, tr);
 
-	const eltype *const a = setup.a + al.baseoffset / sizeof(eltype);
-	eltype *const r = setup.r + rl.baseoffset / sizeof(eltype);
+	eltype *const a = ws->a + al.baseoffset / sizeof(eltype);
+	eltype *const b = ws->b + bl.baseoffset / sizeof(eltype);
+
+	matfill(id, al.absolutebaserow, a, al.baserow, al.nrows, m, tc,
+		elrand);
+
+	matfill(id * 5, bl.absolutebaserow, b, bl.baserow, bl.nrows, n, tr,
+		elrand); 
+
+	printf("rand %u with %u rows is done on core %d\n", id, al.nrows,
+		sched_getcpu());
+}
+
+static eltype * matalloc(const runconfig *const rc, unsigned m, unsigned n)
+{
+	return
+		peekmap(rc, -1, 0, sizeof(eltype) * m * n,
+			pmabwrite, pmcfgshared);
+}
+
+static void matfree(
+	const runconfig *const rc,
+	eltype *const mtx, unsigned m, unsigned n)
+{
+	dropmap(rc, mtx, sizeof(eltype) * m * n);
+}
+
+int main(const int argc, const char *const argv[])
+{
+	const runconfig *const rc = formconfig(argc, argv, 64, 1024);
+	const unsigned sz = rc->size;
+
+	printf("\tmatrix size: %fMiB\n",
+		(double)sz * sz * sizeof(eltype) / (double)(1 << 20));
+
+	const workset ws = {
+		.a = matalloc(rc, sz, sz),
+		.b = matalloc(rc, sz, sz),
+		.r = matalloc(rc, sz, sz) };
+
+	void *const a = ws.a;
+	void *const b = ws.b;
+	void *const r = ws.r;
+
+	printf("\tallocated. a: %p; b: %p; r: %p\n", a, b, r);
+
+	treeplugin tp = {
+		.makeargument = makeidargument,
+		.dropargument = dropidargument,
+		.rc = rc,
+		.extra = (void *)&ws };
+
+	printf("randomization\n");
+	fflush(stdout);
+
+	tp.treeroutine = randroutine;
+	treespawn(&tp);
+
+	printf("multiplication\n");
+	fflush(stdout);
+
+	tp.treeroutine = multroutine;
+	treespawn(&tp);
+
+	matfree(rc, a, sz, sz);
+	matfree(rc, b, sz, sz);
+
+	printf("some values\n");
+	const unsigned tr = tilerows;
+	matdump(r, sz, sz, tr, tr, 127, 237, 8, 8);
 	
-	matmul(a, setup.b, al.baserow, al.nrows, m, n, r);
-
-	printf("mult %u with %u rows is done\n", id, l);
-}
-
-// static eltype * matalloc(const unsigned m, const unsigned n)
-// {
-// 	const long plen = sysconf(_SC_PAGESIZE);
-// 	if(plen > 0 && plen < (1 << 30)) {} else
-// 	{
-// 		eprintf("err: %s. can't get sane page size. plen: %ld\n",
-// 			strerror(errno), plen);
-// 		exit(1);
-// 	}
-// 
-// 	const unsigned len = align(m * n * sizeof(eltype), plen);
-// 
-// 	printf("mmaping for len %u\n", len);
-// 
-// 	void * ptr = mmap(NULL, len, PROT_WRITE | PROT_READ, 
-// 		MAP_ANONYMOUS | MAP_HUGETLB | MAP_SHARED,
-// 		0, 0);
-// 
-// 	if(ptr != MAP_FAILED) {} else
-// 	{
-// 		eprintf("err: %s. can't allocate %u bytes\n", len);
-// 		exit(1);
-// 	}
-// 	
-// 	return ptr;
-// }
-
-static eltype * matalloc(const unsigned m, const unsigned n)
-{
-	return (eltype *)peekmap(&setup.cfg, -1, 0,
-		m * n * sizeof(eltype),
-		PROT_WRITE);
-}
-
-// static void * matalloc(const unsigned m, const unsigned n)
-// {
-// 	const long plen = sysconf(_SC_PAGESIZE);
-// 	if(plen > 0 && plen < (1 << 30)) {} else
-// 	{
-// 		eprintf("err: %s. can't get sane page size. plen: %ld\n",
-// 			strerror(errno), plen);
-// 		exit(1);
-// 	}
-// 
-// 	const unsigned len = align(m * n * sizeof(eltype), plen);
-// 
-// 	const int shmid = shmget(IPC_PRIVATE, len, SHM_HUGETLB | SHM_R | SHM_W);
-// 	if(shmid > 0) {} else
-// 	{
-// 		eprintf("err: %s. can't get shm of len %u\n",
-// 			strerror(errno), len);
-// 		exit(1);
-// 	}
-// 
-// 	void *const ptr = shmat(shmid, NULL, 0);
-// 	if((intptr_t)ptr != -1) {} else
-// 	{
-// 		eprintf("err: %s. can't attach shm\n", strerror(errno));
-// 	}
-// 
-// 	return ptr;
-// }
-
-int main(int argc, const char *const *const argv)
-{
-	setup.cfg = fillconfig(argc, argv);
-	const unsigned sz = setup.cfg.size;
-	const unsigned nw = setup.cfg.nworkers;
-
-	printf("nworkers: %u; matrix size: %fMiB\n",
-		nw, (double)sz * sz * sizeof(eltype) / (double)(1 << 20));
-
-	setup.a = matalloc(sz, sz);
-	setup.b = matalloc(sz, sz);
-	setup.r = matalloc(sz, sz);
-
-	printf("allocated\n");
-
-	printf("randomization\n"); fflush(stdout); fflush(stderr);
-	runjobs(nw, randroutine);
-
-	printf("multiplication\n"); fflush(stdout); fflush(stderr);
-	runjobs(nw, multroutine);
-
-	printf("DONE\n");
-
+	matfree(rc, r, sz, sz);
+	
 	return 0;
 }

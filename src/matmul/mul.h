@@ -20,22 +20,18 @@ extern void matmul(
 	const unsigned n,
 	eltype rmtx[]);
 
-extern void matrand(
+extern void matfill(
 	unsigned id,
 	const unsigned absolutebaserow,
 	eltype mtx[],
 	const unsigned baserow,
 	const unsigned m,
 	const unsigned n,
-	const unsigned tilecolumns);
+	const unsigned tilecolumns,
+	eltype (*const genfn)(const unsigned, const unsigned, unsigned *const));
 
-// extern eltype matat(
-// 	const eltype mtx[],
-// 	const unsigned m,
-// 	const unsigned i,
-// 	const unsigned j,
-// 	const unsigned tr,
-// 	const unsigned tc);
+extern eltype elidentity(const unsigned i, const unsigned j, unsigned *const);
+extern eltype elrand(const unsigned i, const unsigned j, unsigned *const rndst);
 
 extern void matdump(
 	const eltype araw[],
@@ -47,6 +43,5 @@ extern void matdump(
 	const unsigned cbase,
 	const unsigned rlen,
 	const unsigned blen);
-
 
 #endif

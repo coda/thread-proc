@@ -58,14 +58,15 @@ void matmul(
 	}
 }
 
-void matrand(
+void matfill(
 	unsigned seed,
 	unsigned abr,
 	eltype *const araw,
 	const unsigned baserow,
 	const unsigned l,
 	const unsigned m,
-	const unsigned tc)
+	const unsigned tc,
+	eltype (*const fn)(const unsigned, const unsigned, unsigned *const))
 {
 	if(m % tc)
 	{
@@ -78,17 +79,10 @@ void matrand(
 	eltype (*const a)[m / tc][tr][tc] =
 		(eltype (*const)[m / tc][tr][tc])araw;
 
-//  	eprintf("randomizing for: a: %p; baserow: %u; l: %u; m: %u; "
-// 		"tr: %u; tc: %u\n",
-// 		a, baserow, l, m, tr, tc);
-
 	for(unsigned i = baserow; i < baserow + l; i += 1)
 	for(unsigned j = 0; j < m; j += 1)
 	{
-		a[i/tr][j/tc][i % tr][j % tc]
-			= 1.0 / (double)((rand_r(&seed) >> 24) + 1);
-
-//		a[i/tr][j/tc][i%tr][j%tc] = (double)(i + abr == j);
+		a[i/tr][j/tc][i%tr][j%tc] = fn(i + abr, j, &seed);
 	}
 }
 

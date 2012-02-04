@@ -66,8 +66,11 @@ static void randroutine(const void *const arg)
 	eltype *const a = ws->a + al.baseoffset / sizeof(eltype);
 	eltype *const b = ws->b + bl.baseoffset / sizeof(eltype);
 
-	matrand(id, al.absolutebaserow, a, al.baserow, al.nrows, m, tc);
-	matrand(id * 5, bl.absolutebaserow, b, bl.baserow, bl.nrows, n, tr); 
+	matfill(id, al.absolutebaserow, a, al.baserow, al.nrows, m, tc,
+		elrand);
+
+	matfill(id * 5, bl.absolutebaserow, b, bl.baserow, bl.nrows, n, tr,
+		elrand); 
 
 	printf("rand %u with %u rows is done on core %d\n", id, al.nrows,
 		sched_getcpu());
@@ -89,11 +92,6 @@ int main(const int argc, const char *const argv[])
 {
 	const runconfig *const rc = formconfig(argc, argv, 64, 1024);
 	const unsigned sz = rc->size;
-
-// 	if(sz >= 512) { } else
-// 	{
-// 		fail("problem size %u is too small", sz);
-// 	}
 
 	printf("\tmatrix size: %fMiB\n",
 		(double)sz * sz * sizeof(eltype) / (double)(1 << 20));
@@ -123,21 +121,14 @@ int main(const int argc, const char *const argv[])
 	tp.treeroutine = multroutine;
 	treespawn(&tp);
 
+	free(a);
+	free(b);
+
 	printf("some values\n");
-
 	const unsigned tr = tilerows;
-//	const unsigned tc = tilecols;
-
-// 	matdump(a, sz, sz, tr, tc, 273, 273, 8, 8);
-// 	printf("\n");
-// 	matdump(b, sz, sz, tc, tr, 237, 237, 8, 8);
-// 	printf("\n");
-
 	matdump(r, sz, sz, tr, tr, 127, 237, 8, 8);
 	
 	free(r);
-	free(b);
-	free(a);
-
+	
 	return 0;
 }

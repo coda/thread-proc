@@ -1,6 +1,8 @@
 ubld = $(bld)/util
 
-usrc = config.c echotwo.c tools.c spawn.c procspawn.c cfgtest.c spawntest.c
+usrc = config.c echotwo.c tools.c spawn.c procspawn.c memfile.c memmap.c \
+	cfgtest.c spawntest.c
+
 uobj = $(call c2o,$(ubld),$(usrc))
 ubin = $(bld)/bin/cfgtest $(bld)/bin/procspawntest $(bld)/bin/threadspawntest
 ucommon = $(call c2o,$(ubld),config.c echotwo.c tools.c spawn.c)
