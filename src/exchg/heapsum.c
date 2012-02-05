@@ -1,4 +1,4 @@
-#include <exchg/work.h>
+#include <exchg/heapsum.h>
 #include <stdlib.h>
 
 static void minheapify(unsigned N, eltype *const nums, const unsigned i)

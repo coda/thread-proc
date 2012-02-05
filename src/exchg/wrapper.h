@@ -1,8 +1,9 @@
 #ifndef wrapperhincluded
 #define wrapperhincluded
 
-extern unsigned uintwrite(const int fd, const unsigned i);
-extern unsigned uintread(const int fd);
+enum ( piperead = 0, pipewrite = 1 };
+
+extern void wprpipe(int pipefds[]);
 extern void wprclose(const int fd);
 extern void wprlength(const int fd);
 

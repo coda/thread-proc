@@ -1,8 +1,10 @@
 extern "C" {
 #include <exchg/heapsum.h>
+#include <exchg/ringlink.h>
 #include <util/config.h>
 #include <util/spawn.h>
 #include <util/tools.h>
+#include <util/echotwo.h>
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -33,17 +35,15 @@ struct jobspec
 		const unsigned i,
 		const runconfig *const c,
 		elvector *const a,
-		const ringlink l) : arrays(a), cfg(c), id(i)
+		const int readend,
+		const int writeend) : arrays(a), cfg(c), id(i)
 	{
-		rl.writable = 1;
-		rl.nexchanges = 0;
-		rl.toread = l.toread;
-		rl.towrite = l.towrite;
+		rlform(&rl, readend, writeend);
 	};
 
 	~jobspec() // it isn't virtual, there is no inheritance 
 	{
-		droprlink(&rl);
+		rldrop(&rl);
 	}
 };
 
@@ -52,16 +52,13 @@ static unsigned expand(
 	const unsigned id, const unsigned n);
 
 static unsigned shrink(
-	vector<eltype>&, ringlink *const,
-	const unsigned, const unsigned);
+	vector<eltype>&, ringlink *const, const unsigned, const unsigned);
 
 static unsigned exchange(
-	vector<eltype>&, ringlink *const,
-	const unsigned, const unsigned);
+	vector<eltype>&, ringlink *const, const unsigned, const unsigned);
 
 static unsigned (*const functions[])(
-	vector<eltype>&, ringlink *const, const unsigned,
-	const unsigned) =
+	vector<eltype>&, ringlink *const, const unsigned, const unsigned) =
 {
 	expand,
 	shrink,
@@ -79,7 +76,7 @@ static void * routine(void * arg)
 {
 	jobspec *const j = (jobspec *const)arg;
 
-	const unsigned iters = j->cfg->niterations / j->cfg->nworkers;
+	const unsigned iters = j->cfg->size / j->cfg->nworkers;
 
 	unsigned seed = j->id;
 
@@ -103,7 +100,7 @@ static void * routine(void * arg)
 		fail("unit %03u exception: %s\n", e.what());
 	}
 
-	uiwrite(j->rl.towrite, (unsigned)-1);
+	rlwrite(&j->rl, (unsigned)-1);
 
  	printf("unit %03u done. iters: %u; exchanges: %u\n",
  		j->id, i, j->rl.nexchanges);
@@ -198,9 +195,9 @@ static void runjobs(
 	delete[] threads;
 }
 
-static void process(const testconfig *const cfg)
+static void process(const runconfig *const rc)
 {
-	elvector *const arrays = new elvector[cfg->nworkers];
+	elvector *const arrays = new elvector[rc->nworkers];
 
 	runjobs(cfg, arrays, routine);
 
@@ -211,9 +208,8 @@ static void process(const testconfig *const cfg)
 		if(len)
 		{
 			printf("\t%f\t%lu of %lu\n",
-				arrays[i].v[len / 2],
-				(unsigned long)len / 2,
-				(unsigned long)len);
+				(double)arrays[i].v[len / 2],
+				(unsigned long)len / 2, (unsigned long)len);
 		}
 		else
 		{
@@ -228,11 +224,11 @@ int main(const int argc, const char *const *const argv)
 {
 	ignoresigpipe();
 
-	const testconfig cfg = fillconfig(argc, argv);
+	const runconfig *const rc = formconfig(argc, argv, 64, 2048);
 
 	try
 	{
-		process(&cfg);
+		process(rc);
 	}
 	catch(const exception& e)
 	{
@@ -273,12 +269,8 @@ static unsigned shrink(
 	{
 		const eltype sum = heapsum(&array[0], n);
 
-//		eprintf("before shrink %lu elems: %lu; ", n, array.size());
-
  		vector<eltype>::iterator b = array.begin();
  		array.erase(b, b + n);
-
-//		eprintf("after: %lu\n", array.size());
 
 		array.push_back(sum);
 	}
@@ -291,11 +283,6 @@ static unsigned exchange(
 	const unsigned id, const unsigned n)
 {
 	rl->nexchanges += 1;
-
-	if(rl->writable)
-	{
-		rl->writable = uiwrite(rl->towrite, id);
-	}
-
-	return uiread(rl->toread);
+	rlwrite(rl, id);
+	return rlread(rl);
 }
