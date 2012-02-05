@@ -40,13 +40,13 @@ static void randroutine(const void *const arg)
 	const unsigned adiff = (al.baseoffset - al.mapoffset) / sizeof(eltype);
 	eltype *const a
 		= (eltype *)peekmap(rc, ws->fda, al.mapoffset, al.maplength,
-			pmabwrite, pmcfgshared)
+			pmwrite | pmshared)
 		+ adiff;
 
 	const unsigned bdiff = (bl.baseoffset - bl.mapoffset) / sizeof(eltype);
 	eltype *const b
 		= (eltype *)peekmap(rc, ws->fdb, bl.mapoffset, bl.maplength,
-			pmabwrite, pmcfgshared)
+			pmwrite | pmshared)
 		+ bdiff;
 
 	matfill(id, al.absolutebaserow, a, al.baserow, al.nrows, m, tc,
@@ -88,16 +88,16 @@ static void multroutine(const void *const arg)
 
 	const eltype *const a
 		= (const eltype *)peekmap(rc, ws->fda,
-			al.mapoffset, al.maplength, 0, 0)
+			al.mapoffset, al.maplength, 0)
 		+ adiff;
 
 	const eltype *const b
 		= (const eltype *)peekmap(rc, ws->fdb,
-			bl.mapoffset, bl.maplength, 0, 0);
+			bl.mapoffset, bl.maplength, 0);
 
 	eltype *const r
 		= (eltype *)peekmap(rc, ws->fdr,
-			rl.mapoffset, rl.maplength, pmabwrite, pmcfgshared)
+			rl.mapoffset, rl.maplength, pmwrite | pmshared)
 		+ rdiff;
 
 	matmul(a, b, al.baserow, al.nrows, m, n, r);
@@ -147,7 +147,7 @@ int main(const int argc, const char *const argv[])
 
 	const eltype *const r
 		= (const eltype *)peekmap(rc, ws.fdr,
-			0, m * m * sizeof(eltype), 0, 0);
+			0, m * m * sizeof(eltype), 0);
 
 	matdump(r, m, m, tr, tr, 127, 237, 8, 8);
 	

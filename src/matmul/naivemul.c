@@ -1,8 +1,7 @@
 #include <matmul/mul.h>
-#include <matmul/util.h>
+#include <util/echotwo.h>
 
 #include <stdio.h>
-// #include <stdlib.h>
 
 void matmul(
 	const eltype *const araw,
@@ -46,9 +45,6 @@ void matfill(
 	for(unsigned i = 0; i < l; i += 1)
 	for(unsigned j = 0; j < m; j += 1)
 	{
-		// a[i][j] = 1.0 / (double)((rand_r(&seed) >> 24) + 1);
-		// a[i][j] = (double)(i + abr == j);
-
 		a[i][j] = fn(i + abr, j, &seed);
 	}
 }

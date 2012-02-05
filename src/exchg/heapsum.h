@@ -1,5 +1,5 @@
-#ifndef exchghincluded
-#define exchghincluded
+#ifndef heapsumhincluded
+#define heapsumhincluded
 
 typedef double eltype;
 

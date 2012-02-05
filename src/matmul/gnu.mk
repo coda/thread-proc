@@ -1,5 +1,5 @@
 mbld = $(bld)/matmul
-msrc = naivemul.c tilemul.c element.c muljob.c util.c thread.c proc.c proconfs.c
+msrc = naivemul.c tilemul.c element.c muljob.c thread.c proc.c proconfs.c
 mobj = $(call c2o,$(mbld),$(msrc))
 mbin = $(addprefix $(bld)/bin/,mnt mtt mnp mtp mnpf mtpf)
 

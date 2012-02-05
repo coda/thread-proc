@@ -14,13 +14,11 @@ void * peekmap(
 	const int fd,
 	const unsigned offset,
 	const unsigned length,
-	const unsigned access,
 	const unsigned config)
 {
 	const unsigned len = align(length, rc->pagelength);
-	const unsigned prot = (access & pmabwrite) ? PROT_WRITE : 0;
-
-	unsigned flags = (config & pmcfgshared) ? MAP_SHARED : MAP_PRIVATE;
+	const unsigned prot = (config & pmwrite) ? PROT_WRITE : 0;
+	unsigned flags = (config & pmshared) ? MAP_SHARED : MAP_PRIVATE;
 
 	if(fd == -1)
 	{

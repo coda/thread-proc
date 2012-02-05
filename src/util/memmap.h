@@ -3,22 +3,13 @@
 
 #include <util/config.h>
 
-enum
-{
-	pmabwrite = 0x01
-};
-
-enum
-{
-	pmcfgshared = 0x01
-};
+enum { pmwrite = 0x01, pmshared = 0x02 };
 
 extern void * peekmap(
 	const runconfig *const cfg,
 	const int fd,
 	const unsigned len,
 	const unsigned offset,
-	const unsigned accessbits,
 	const unsigned configbits);
 
 extern void dropmap(

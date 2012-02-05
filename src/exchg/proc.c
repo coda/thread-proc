@@ -1,5 +1,5 @@
-#include <./util.h>
-#include <./work.h>
+#include <exchg/util.h>
+#include <exchg/heapsum.h>
 
 #include <stdio.h>
 #include <stdlib.h>

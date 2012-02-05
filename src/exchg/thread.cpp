@@ -1,15 +1,15 @@
 extern "C" {
-#include <./util.h>
-#include <./work.h>
+#include <exchg/heapsum.h>
+#include <util/config.h>
+#include <util/spawn.h>
+#include <util/tools.h>
 
 #include <stdio.h>
 #include <stdlib.h>
-
-// #include <poll.h>
 }
 
 #include <vector>
-#include <iostream>
+// #include <iostream>
 #include <algorithm>
 
 #include <pthread.h>
@@ -25,13 +25,13 @@ struct elvector
 struct jobspec
 {
 	elvector * arrays;
-	const testconfig * cfg;
+	const runconfig * cfg;
 	unsigned id;
 	ringlink rl;
 
 	jobspec(
 		const unsigned i,
-		const testconfig *const c,
+		const runconfig *const c,
 		elvector *const a,
 		const ringlink l) : arrays(a), cfg(c), id(i)
 	{
@@ -41,7 +41,7 @@ struct jobspec
 		rl.towrite = l.towrite;
 	};
 
-	~jobspec() // it isn't virtual, will not be inherited
+	~jobspec() // it isn't virtual, there is no inheritance 
 	{
 		droprlink(&rl);
 	}

@@ -79,9 +79,7 @@ static void randroutine(const void *const arg)
 
 static eltype * matalloc(const runconfig *const rc, unsigned m, unsigned n)
 {
-	return
-		peekmap(rc, -1, 0, sizeof(eltype) * m * n,
-			pmabwrite, pmcfgshared);
+	return peekmap(rc, -1, 0, sizeof(eltype) * m * n, pmwrite | pmshared);
 }
 
 static void matfree(
