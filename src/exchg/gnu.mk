@@ -5,7 +5,7 @@ esrc = proc.c heapsum.c ringlink.c util.c nixwrapper.c \
 
 eobj = $(call cpp2o,$(ebld),thread.cpp) $(call c2o,$(ebld),$(esrc))
 # ebin = $(addprefix $(bld)/bin/,et ep)
-ebin = $(addprefix $(bld)/bin/,rtt rtp)
+ebin = $(addprefix $(bld)/bin/,rtt rtp et)
 ecommon = $(call c2o,$(ebld),heapsum.c ringlink.c nixwrapper.c) $(ucommon)
 
 exchg: $(ebin)
