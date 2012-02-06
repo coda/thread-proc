@@ -93,11 +93,37 @@ void treespawn(const treeplugin *const tp)
 	const threadargument ta = {
 		.tp = tp,
 		.id = 0,
-		.parentarg = tp->makeargument(tp, 0, NULL) };
+//		.parentarg = tp->makeargument(tp, 0, NULL) };
+		.parentarg = NULL };
 
 	const pthread_t t = runthread(threadroutine, &ta, "can't run root job");
 	setaffinity(t, ta.tp->rc, 0);
 	joinsuccess(t);
-	tp->dropargument(ta.parentarg);
+//	tp->dropargument(ta.parentarg);
 	printf("thread tree DONE\n");
+}
+
+void * makeidargument(
+	const treeplugin *const tp,
+	const unsigned id, 
+	const void *const parentarg)
+{
+	idargument *const ia = malloc(sizeof(idargument));
+
+	if(ia)
+	{
+		ia->id = id;
+		ia->tp = tp;
+	}
+	else
+	{
+		fail("can't allocate argument for job %u", id);
+	}
+
+	return ia;
+}
+
+void dropidargument(void *const arg)
+{
+	free(arg);
 }

@@ -108,7 +108,9 @@ static void runnode(
 	const runconfig *const rc = tp->rc;
 
 	void *const arg = tp->makeargument(tp, id, parentarg);
-	tp->dropargument(parentarg);
+
+	// Wrong; what if there are piping which sould be inherited
+	// tp->dropargument(parentarg);
 
 	pid_t pids[2] = { -1, -1 };
 	const unsigned ids[2] = { 2*id + 1, 2*id + 2 };
@@ -136,7 +138,9 @@ static void runnode(
 	}
 
 	tp->treeroutine(arg);
-	tp->dropargument(arg);
+	
+	// Not needed, will exit soon
+	// tp->dropargument(arg);
 
 	for(unsigned i = 0; i < 2; i += 1)
 	{
@@ -147,4 +151,38 @@ static void runnode(
 			waitsuccess(p);
 		}
 	}
+}
+
+void * makeidargument(
+	const treeplugin *const tp,
+	const unsigned id, 
+	const void *const parentarg)
+{
+	idargument * ia = (idargument *)parentarg;
+
+	if(ia)
+	{
+		ia->id = id;
+	}
+	else
+	{
+		ia = malloc(sizeof(idargument));
+
+		if(ia)
+		{
+			ia->id = id;
+			ia->tp = tp;
+		}
+		else
+		{
+			fail("can't allocate argument for job %u", id);
+		}
+	}
+
+	return ia;
+}
+
+void dropidargument(void *const arg)
+{
+//	free(arg);
 }

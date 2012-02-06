@@ -7,7 +7,6 @@
 #include <stdlib.h>
 #include <stdio.h>
 
-
 // Идея такая: i-тая вершина в дереве отвечает за некоторую часть окружности,
 // которая должна быть подцеплена в общий круг. Общий круг в вершине i видится
 // через i.downread и i.upwrite. Допустим, что i.downread будет использовано в
@@ -29,6 +28,21 @@ typedef struct
 	int upwrite;
 } pipelink;
 
+static void pldrop(const pipelink *const pl)
+{
+	int t;
+
+	if((t = pl->downread) != -1)
+	{
+		wprclose(t);
+	}
+
+	if((t = pl->upwrite) != -1)
+	{
+		wprclose(t);
+	}
+}
+
 typedef struct
 {
 	const treeplugin * tp;
@@ -40,6 +54,22 @@ typedef struct
 } ringargument;
 
 enum { right = 0, left }; // left child has 2 * id + 1 number
+
+// О том, что нужно закрывать, чтобы через fork не просочились болтающиеся
+// ссылки на каналы.
+
+// 1. Два дескриптора, которые используются в родительском процессе:
+//	readend
+//	writeend
+
+// 2. Связь с кольцом (uplink) сиблингов
+
+// 3. Для работы не нужны uplink-и, созданные для дочерних процессов,
+// их можно закрыть
+
+// 4. Можно освободить память, занимаемую prevarg-ом, после инициализации
+// lnk и закрытия свободных концов каналов. Память для arg можно освободить
+// после закрытия uplink-ов и инициализации ringlink
 
 static void * makeargument(
 	const treeplugin *const tp,
@@ -54,8 +84,12 @@ static void * makeargument(
 		fail("can't allocate ring argument");
 	}
 
-	ra->tp = tp;
-	ra->id = id;
+	*ra = (ringargument){
+		.tp = tp,
+		.id = id,
+		.links = { { -1, -1 }, { -1, -1 } },
+		.readend = -1,
+		.writeend = -1 };
 
 	pipelink lnk;
 
@@ -69,7 +103,13 @@ static void * makeargument(
 	else
 	{
 		lnk = pra->links[id%2];
+
+		wprclose(pra->readend);
+		wprclose(pra->writeend);
+		pldrop(pra->links + (id%2 ^ 1));
 	}
+
+	free((void *)pra);
 
 	ra->readend = lnk.downread;
 
@@ -117,8 +157,16 @@ static void dropargument(void *const arg)
 static void treeroutine(const void *const arg)
 {
 	const ringargument *const ra = (const ringargument *)arg;
+	const runconfig *const rc = ra->tp->rc;
 	ringlink rl;
 	rlform(&rl, ra->readend, ra->writeend);
+
+	pldrop(ra->links + 0);
+	pldrop(ra->links + 1);
+	free((void *)ra);
+
+	printf("proc %d ready to run\n", getpid());
+	sleep(rc->size);
 
 	if(ra->id)
 	{
