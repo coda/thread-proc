@@ -1,4 +1,5 @@
 #include <exchg/wrapper.h>
+#include <util/echotwo.h>
 
 #include <unistd.h>
 #include <signal.h>
@@ -11,7 +12,7 @@ void wprpipe(int pipefds[])
 	}
 }
 
-void wprclose(cont int fd)
+void wprclose(const int fd)
 {
 	if(close(fd) == 0) { } else
 	{

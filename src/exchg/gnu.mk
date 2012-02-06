@@ -1,9 +1,9 @@
 ebld = $(bld)/exchg
-esrc = proc.c ringtest.c heapsum.c ringlink.c util.c
+esrc = proc.c ringtest.c heapsum.c ringlink.c util.c nixwrapper.c
 eobj = $(call cpp2o,$(ebld),thread.cpp) $(call c2o,$(ebld),$(esrc))
 # ebin = $(addprefix $(bld)/bin/,et ep)
 ebin = $(addprefix $(bld)/bin/,rt)
-ecommon = $(call c2o,$(ebld),heapsum.c ringlink.c) $(ucommon)
+ecommon = $(call c2o,$(ebld),heapsum.c ringlink.c nixwrapper.c) $(ucommon)
 
 exchg: $(ebin)
 
