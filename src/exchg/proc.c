@@ -1,26 +1,20 @@
+#include <exchg/heapsum.h>
+#include <exchg/vector.h>
 #include <exchg/ringlink.h>
 #include <exchg/wrapper.h>
 #include <util/spawn.h>
 #include <util/echotwo.h>
 #include <util/config.h>
+#include <util/tools.h>
+#include <util/memmap.h>
+#include <util/memfile.h>
 #include <unistd.h>
+#include <sched.h>
+#include <sys/mman.h>
 #include <stdlib.h>
 #include <stdio.h>
 
-// Идея такая: i-тая вершина в дереве отвечает за некоторую часть окружности,
-// которая должна быть подцеплена в общий круг. Общий круг в вершине i видится
-// через i.downread и i.upwrite. Допустим, что i.downread будет использовано в
-// самой вершине i для чтения. Поэтому, допустим, для i.right.downread должна
-// быть создана новая pipe. Для i.right должен быть свой upwrite ведущий в
-// downread для i.left, upwrite для которой должен оставаться i.upwrite. Хорошо.
-
-// Если i.right не существует, тогда новый downread, создаваемый i, должен
-// вести напрямую в downread для i.left.
-
-// Если i.left не существует, тогда i должна использовать read и write
-// использовать
-
-// Связь для i-го узла - это uplink. i%2 == 1 - это i.right узел
+// Definition of ring creation and operation routines
 
 typedef struct
 {
@@ -54,22 +48,6 @@ typedef struct
 } ringargument;
 
 enum { right = 0, left }; // left child has 2 * id + 1 number
-
-// О том, что нужно закрывать, чтобы через fork не просочились болтающиеся
-// ссылки на каналы.
-
-// 1. Два дескриптора, которые используются в родительском процессе:
-//	readend
-//	writeend
-
-// 2. Связь с кольцом (uplink) сиблингов
-
-// 3. Для работы не нужны uplink-и, созданные для дочерних процессов,
-// их можно закрыть
-
-// 4. Можно освободить память, занимаемую prevarg-ом, после инициализации
-// lnk и закрытия свободных концов каналов. Память для arg можно освободить
-// после закрытия uplink-ов и инициализации ringlink
 
 static void * makeargument(
 	const treeplugin *const tp,
@@ -142,59 +120,203 @@ static void * makeargument(
 	return ra;
 }
 
-static void dropargument(void *const arg)
+#define actionfunction(fname) unsigned fname \
+( \
+	const runconfig *const rc, \
+	ringlink *const rl, \
+	vectorfile *const vf, vector *const v, \
+	const unsigned id, \
+	const unsigned r \
+)
+
+static actionfunction(expand);
+static actionfunction(shrink);
+static actionfunction(exchange);
+
+static actionfunction((*const functions[])) =
 {
-	const ringargument *const ra = (const ringargument *)arg;
+	expand,
+	shrink,
+	exchange,
+	expand,
+	shrink,
+	exchange,
+	expand,
+	shrink
+};
 
-	printf("dropping on %03u fds: %d %d\n",
-		ra->id, ra->readend, ra->writeend);
-
-	wprclose(ra->readend);
-	wprclose(ra->writeend);
-	free(arg);
-}
+const unsigned nfunctions = (sizeof(functions) / sizeof(void *));
 
 static void treeroutine(const void *const arg)
 {
 	const ringargument *const ra = (const ringargument *)arg;
-	const runconfig *const rc = ra->tp->rc;
 	ringlink rl;
 	rlform(&rl, ra->readend, ra->writeend);
+
+	const runconfig *const rc = ra->tp->rc;
+	const unsigned jid = ra->id;
+	elvector *const vcts = ra->tp->extra;
+
+//	eprintf("job %03u is here\n", jid);
 
 	pldrop(ra->links + 0);
 	pldrop(ra->links + 1);
 	free((void *)ra);
 
-	printf("proc %d ready to run\n", getpid());
-	sleep(rc->size);
 
-	if(ra->id)
+	vector v = {
+		.ptr = NULL,
+		.capacity = 0,
+		.length = 0,
+		.offset = 0 };
+
+	const unsigned iters = rc->size / rc->nworkers;
+	unsigned id = jid;
+	unsigned seed = jid;
+	unsigned i;
+	actionfunction((* lastfn)) = NULL;
+
+	for(i = 0; id != (unsigned)-1 && i < iters; i += 1)
 	{
-		rlwrite(&rl, rlread(&rl) + 1);
+		const unsigned r = rand_r(&seed);
+		const unsigned fn = r % nfunctions;
+
+		lastfn = functions[fn];
+		id = lastfn(rc, &rl, &vcts[id].vf, &v, id, r);
 	}
-	else
+
+	if(lastfn != exchange)
 	{
-		rlwrite(&rl, 1);
-		printf("got at root %u\n", rlread(&rl));
+		vectorupload(&v, &vcts[id].vf);
 	}
+
+	rlwrite(&rl, (unsigned)-1);
+
+	printf("job %03u done. iters %u; exchanges %u. on core %d\n",
+		jid, i, rl.nexchanges, sched_getcpu());		
 }
 
 int main(const int argc, const char *const argv[])
 {
-	printf("running with pid %d\n", getpid());
+	const runconfig *const rc = formconfig(argc, argv, 64, 256 * 1024);
+	elvector *const vcts
+		= peekmap(rc, -1, 0, rc->nworkers * sizeof(elvector),
+			pmshared | pmwrite);
+
+//	eprintf("ready to fill\n");
+
+
+	for(unsigned i = 0; i < rc->nworkers; i += 1)
+	{
+		vcts[i].vf = (vectorfile){
+			.fd = makeshm(rc, 0), .length = 0, .offset = 0 };
+	}
+
+//	eprintf("ready to run\n");
+
+	fflush(stdout);
+	fflush(stderr);
+
+	disablesigpipe();
 
 	const treeplugin tp = {
-		.rc = formconfig(argc, argv, 64, 0),
-		.extra = NULL,
 		.treeroutine = treeroutine,
 		.makeargument = makeargument,
-		.dropargument = dropargument };
+		.dropargument = NULL,
+		.rc = rc,
+		.extra = vcts };
 
 	treespawn(&tp);
 
-	sleep(tp.rc->size);
+	printf("some values\n");
+	for(unsigned i = 0; i < rc->nworkers; i += 1)
+	{
+		const unsigned len = vcts[i].vf.length / sizeof(eltype);
+		if(len)
+		{
+			printf("\t%f\t%u of %u\n",
+				(double)vfelat(&vcts[i].vf, len/2), len/2, len);
+		}
+		else
+		{
+			printf("\tEMPTY\n");
+		}
+	}
 
 	freeconfig((runconfig *)tp.rc);
 	
 	return 0;
+}
+
+// Definition of action functions
+
+actionfunction(expand) // fn(rc, rl, vf, v, id, r) id
+{
+//	eprintf("expand\n");
+
+	const unsigned n = r % workfactor;
+	unsigned seed = r;
+	
+	eltype *const buf = vectorexpand(rc, v, n);
+
+	for(unsigned i = 0; i < n; i += 1)
+	{
+		buf[i] = elrand(&seed);
+	}
+
+	v->length += n * sizeof(eltype);
+
+	return id;
+}
+
+static unsigned min(const unsigned a, const unsigned b)
+{
+	return a < b ? a : b;
+}
+
+actionfunction(shrink)
+{
+//	eprintf("shrink\n");
+
+	const unsigned cnt = v->length / sizeof(eltype *);
+
+	const unsigned n = min(r % workfactor, cnt);
+	eltype * buf = (eltype *)(v->ptr + v->offset);
+
+	if(n > 0)
+	{
+		const eltype sum = heapsum(buf, n);
+
+		v->offset += n * sizeof(eltype);
+		v->length -= n * sizeof(eltype);
+ 		vectorshrink(rc, v);
+
+		buf = vectorexpand(rc, v, 1);
+		buf[0] = sum;
+		v->length += sizeof(eltype);
+	}
+
+	return id;
+}
+
+actionfunction(exchange)
+{
+//	eprintf("exchange\n");
+
+	rl->nexchanges += 1;
+
+	vectorupload(v, vf);
+
+//	eprintf("xchg: uploaded\n");
+
+	rlwrite(rl, id);
+	const unsigned i = rlread(rl);
+
+	if(i != (unsigned)-1)
+	{
+		vectorfile *const ivf = &(((elvector *)vf) - id + i)->vf;
+		vectordownload(rc, ivf, v);
+	}
+
+	return i;
 }

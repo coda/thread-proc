@@ -158,10 +158,10 @@ static void treeroutine(const void *const arg)
 		for(i = 0; id != (unsigned)-1 && i < iters; i += 1)
 		{
 			const unsigned r = rand_r(&seed);
-			// const unsigned fn = r % nfunctions;
+			const unsigned fn = r % nfunctions;
 
 			previd = id;
-			id = exchange(vcts[previd].v, &rl, id, r);
+			id = functions[fn](vcts[previd].v, &rl, id, r);
 		}
 	}
 	catch(const exception& e)
@@ -208,7 +208,9 @@ static void process(const runconfig *const rc)
 
 int main(const int argc, const char *const argv[])
 {
-	const runconfig *const rc = formconfig(argc, argv, 64, 2048);
+	disablesigpipe();
+
+	const runconfig *const rc = formconfig(argc, argv, 64, 256 * 1024);
 
 	try
 	{

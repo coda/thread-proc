@@ -15,7 +15,21 @@ static void waitsuccess(const pid_t p)
 	{
 		if(WIFEXITED(status) && WEXITSTATUS(status) == 0) { } else
 		{
-			fail("process %d failed with status: %d", p, status);
+			const char * reason = "NA";
+			int code = -1;
+
+			if(WIFEXITED(status))
+			{
+				reason = "exit";
+				code = WEXITSTATUS(status);
+			}
+			else if(WIFSIGNALED(status))
+			{
+				reason = "signal";
+				code = WTERMSIG(status);
+			}
+			
+			fail("process %d failed: %s %d", p, reason, code);
 		}
 	}
 	else

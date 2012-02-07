@@ -3,6 +3,7 @@
 
 #include <unistd.h>
 #include <signal.h>
+#include <sys/stat.h>
 
 void wprpipe(int pipefds[])
 {
@@ -17,6 +18,32 @@ void wprclose(const int fd)
 	if(close(fd) == 0) { } else
 	{
 		fail("can't close %d", fd);
+	}
+}
+
+unsigned wprlength(const int fd)
+{
+	struct stat st;
+
+	if(fstat(fd, &st) == 0) { } else
+	{
+		fail("can't fstat to get length of %d", fd);
+	}
+
+	if(st.st_size < ((unsigned)-1 >> 1)) { } else
+	{
+		fail("file %d of len %lu is too long",
+			fd, (unsigned long)st.st_size);
+	}
+
+	return st.st_size;
+}
+
+void wprtruncate(const int fd, const unsigned len)
+{
+	if(ftruncate(fd, len) == 0) { } else
+	{
+		fail("can't truncate");
 	}
 }
 

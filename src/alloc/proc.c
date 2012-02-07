@@ -23,7 +23,7 @@ int main(const int argc, const char *const argv[])
 		.dropargument = dropidargument,
 		.treeroutine = routine,
 		.extra = NULL,
-		.rc = formconfig(argc, argv, 64, 64 * 1024) };
+		.rc = formconfig(argc, argv, 64, 1024 * 1024) };
 
 	treespawn(&tp);
 	freeconfig((runconfig *)tp.rc);

@@ -8,6 +8,8 @@ uobj = $(call c2o,$(ubld),$(usrc))
 ubin = $(bld)/bin/cfgtest $(bld)/bin/procspawntest $(bld)/bin/threadspawntest
 ucommon = $(call c2o,$(ubld),config.c echotwo.c tools.c)
 
+umemcommon = $(ucommon) $(call c2o,$(ubld),memmap.c memfile.c)
+
 util: $(ubin)
 
 $(bld)/bin/cfgtest: $(ubld)/cfgtest.o $(ucommon)
