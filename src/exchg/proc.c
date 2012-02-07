@@ -252,7 +252,7 @@ int main(const int argc, const char *const argv[])
 
 actionfunction(expand) // fn(rc, rl, vf, v, id, r) id
 {
-//	eprintf("expand ");
+//	eprintf("expand\n");
 
 	const unsigned n = r % workfactor;
 	unsigned seed = r;
@@ -280,6 +280,8 @@ static unsigned min(const unsigned a, const unsigned b)
 
 actionfunction(shrink)
 {
+//	eprintf("shrink\n");
+
 	const unsigned cnt = v->length / sizeof(eltype);
 	const unsigned n = min(r % workfactor, cnt);
 
@@ -309,11 +311,16 @@ actionfunction(exchange)
 {
 //	eprintf("exchange\n");
 
-	return id;
-
 	rl->nexchanges += 1;
 
+//	edumpvector(v);
 	vectorupload(v, vf);
+//	edumpvector(v);
+
+// 	if(vf->length)
+// 	{
+// 		eprintf("%f\n", vfelat(vf, 0));
+// 	}
 
 //	eprintf("xchg: uploaded\n");
 
@@ -324,7 +331,10 @@ actionfunction(exchange)
 	{
 		vectorfile *const ivf = &(((elvector *)vf) - id + i)->vf;
 		vectordownload(rc, ivf, v);
+//		edumpvector(v);
 	}
+
+//	eprintf("\n");
 
 	return i;
 }

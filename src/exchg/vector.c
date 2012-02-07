@@ -79,28 +79,32 @@ eltype * vectorexpand(
 
 void vectorshrink(const runconfig *const rc, vector *const v)
 {
-//	eprintf("shrinking\t");
-//	edumpvector(v);
-//	eprintf("\n");
+// 	eprintf("shrinking\t");
+// 	edumpvector(v);
+// 	eprintf("\n");
 
 	const unsigned plen = rc->pagelength;
 	const unsigned remapoff = aligndown(v->offset, plen);
 
 	if(remapoff > 0)
 	{
+		void * ptr = NULL;
 		const unsigned remaplen = v->capacity - remapoff;
-		
-		void *const ptr
-			= mremap(v->ptr + remapoff, remaplen,
-				remaplen, MREMAP_MAYMOVE);
-		
-		if(ptr != MAP_FAILED) { } else
+		if(remaplen > 0)
 		{
-			fail("shrinking. can't remap. "
-				"v.(ptr capacity offset length): %p %u %u %u; "
-				"off: %u; len: %u",
-				v->ptr, v->capacity, v->offset, v->length,
-				remapoff, remaplen);
+			ptr =
+				mremap(v->ptr + remapoff,
+					remaplen, remaplen, MREMAP_MAYMOVE);
+			
+			if(ptr != MAP_FAILED) { } else
+			{
+				fail("shrinking. can't remap. "
+					"v: %p:%u %u:%u; "
+					"off: %u; len: %u",
+					v->ptr, v->capacity,
+					v->offset, v->length,
+					remapoff, remaplen);
+			}
 		}
 
 		if(munmap(v->ptr, remapoff) == 0) { } else
@@ -150,6 +154,12 @@ void vectordownload(
 	{
 		v->ptr = peekmap(rc, -1, 0, len, pmwrite);
 		v->capacity = len;
+
+		if(pread(vf->fd, v->ptr, len, 0) == len) { } else
+		{
+			fail("downloading. can't read");
+		}
+
 		v->offset = vf->offset;
 		v->length = vf->length;
 
