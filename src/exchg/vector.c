@@ -30,14 +30,24 @@ eltype vfelat(const vectorfile *const vf, const unsigned i)
 	return value;
 }
 
+void edumpvector(const vector *const v)
+{
+	eprintf("v: %p:%u %u:%u ",
+		v->ptr, v->capacity, v->offset, v->length);
+}
+
 eltype * vectorexpand(
 	const runconfig *const rc, vector *const v, const unsigned n)
 {
+// 	eprintf("expanding %u\t", n * sizeof(eltype));
+// 	edumpvector(v);
+
 	const unsigned plen = rc->pagelength;
 	const unsigned need = v->offset + v->length + n * sizeof(eltype);
 
 	if(need < v->capacity)
 	{
+//		eprintf("\n");
 		return (eltype *)(v->ptr + v->offset + v->length);
 	}
 
@@ -60,11 +70,19 @@ eltype * vectorexpand(
 	v->capacity = align(need, plen);
 	v->ptr = ptr;
 
+//	eprintf("AFT ");
+//	edumpvector(v);
+//	eprintf("\n");
+
 	return (eltype *)(v->ptr + v->offset + v->length);
 }
 
 void vectorshrink(const runconfig *const rc, vector *const v)
 {
+//	eprintf("shrinking\t");
+//	edumpvector(v);
+//	eprintf("\n");
+
 	const unsigned plen = rc->pagelength;
 	const unsigned remapoff = aligndown(v->offset, plen);
 
@@ -78,7 +96,11 @@ void vectorshrink(const runconfig *const rc, vector *const v)
 		
 		if(ptr != MAP_FAILED) { } else
 		{
-			fail("shrinking. can't remap");
+			fail("shrinking. can't remap. "
+				"v.(ptr capacity offset length): %p %u %u %u; "
+				"off: %u; len: %u",
+				v->ptr, v->capacity, v->offset, v->length,
+				remapoff, remaplen);
 		}
 
 		if(munmap(v->ptr, remapoff) == 0) { } else

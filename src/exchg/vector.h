@@ -39,4 +39,6 @@ extern void vectorupload(vector *const v, vectorfile *const vf);
 extern void vectordownload(
 	const runconfig *const rc, vectorfile *const vf, vector *const v);
 
+extern void edumpvector(const vector *const v);
+
 #endif

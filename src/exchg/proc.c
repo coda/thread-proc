@@ -252,7 +252,7 @@ int main(const int argc, const char *const argv[])
 
 actionfunction(expand) // fn(rc, rl, vf, v, id, r) id
 {
-//	eprintf("expand\n");
+//	eprintf("expand ");
 
 	const unsigned n = r % workfactor;
 	unsigned seed = r;
@@ -266,6 +266,10 @@ actionfunction(expand) // fn(rc, rl, vf, v, id, r) id
 
 	v->length += n * sizeof(eltype);
 
+// 	eprintf("AFT ");
+// 	edumpvector(v);
+// 	eprintf("\n");
+
 	return id;
 }
 
@@ -276,15 +280,17 @@ static unsigned min(const unsigned a, const unsigned b)
 
 actionfunction(shrink)
 {
-//	eprintf("shrink\n");
-
-	const unsigned cnt = v->length / sizeof(eltype *);
-
+	const unsigned cnt = v->length / sizeof(eltype);
 	const unsigned n = min(r % workfactor, cnt);
-	eltype * buf = (eltype *)(v->ptr + v->offset);
+
+// 	eprintf("shrink %u elems of len %u\n", n, n * sizeof(eltype));
+// 	edumpvector(v);
+// 	eprintf("\n");
 
 	if(n > 0)
 	{
+		eltype * buf = (eltype *)(v->ptr + v->offset);
+
 		const eltype sum = heapsum(buf, n);
 
 		v->offset += n * sizeof(eltype);
@@ -302,6 +308,8 @@ actionfunction(shrink)
 actionfunction(exchange)
 {
 //	eprintf("exchange\n");
+
+	return id;
 
 	rl->nexchanges += 1;
 
