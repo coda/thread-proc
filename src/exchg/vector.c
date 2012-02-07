@@ -88,33 +88,33 @@ void vectorshrink(const runconfig *const rc, vector *const v)
 
 	if(remapoff > 0)
 	{
-		void * ptr = NULL;
-		const unsigned remaplen = v->capacity - remapoff;
-		if(remaplen > 0)
-		{
-			ptr =
-				mremap(v->ptr + remapoff,
-					remaplen, remaplen, MREMAP_MAYMOVE);
-			
-			if(ptr != MAP_FAILED) { } else
-			{
-				fail("shrinking. can't remap. "
-					"v: %p:%u %u:%u; "
-					"off: %u; len: %u",
-					v->ptr, v->capacity,
-					v->offset, v->length,
-					remapoff, remaplen);
-			}
-		}
+// 		void * ptr = NULL;
+// 		const unsigned remaplen = v->capacity - remapoff;
+// 		if(remaplen > 0)
+// 		{
+// 			ptr =
+// 				mremap(v->ptr + remapoff,
+// 					remaplen, remaplen, MREMAP_MAYMOVE);
+// 			
+// 			if(ptr != MAP_FAILED) { } else
+// 			{
+// 				fail("shrinking. can't remap. "
+// 					"v: %p:%u %u:%u; "
+// 					"off: %u; len: %u",
+// 					v->ptr, v->capacity,
+// 					v->offset, v->length,
+// 					remapoff, remaplen);
+// 			}
+// 		}
 
 		if(munmap(v->ptr, remapoff) == 0) { } else
 		{
 			fail("shrinking. can't unmap");
 		}	
 
-		v->ptr = ptr;
+		v->ptr += remapoff;
 		v->offset -= remapoff;
-		v->capacity = remaplen;
+		v->capacity -= remapoff;
 	}
 }
 

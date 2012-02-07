@@ -47,7 +47,7 @@ void * peekmap(
 	void * m = mmap(NULL, len, PROT_READ | prot, flags, fd, offset);
 	if(m != MAP_FAILED) { } else
 	{
-		fail("peekmap. can't mmap. len: %u; off: %u; fd: %d\n",
+		fail("peekmap. can't mmap. len: %u; off: %u; fd: %d",
 			len, offset, fd);
 	}
 
