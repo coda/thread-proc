@@ -408,7 +408,7 @@ static unsigned min(const unsigned a, const unsigned b)
 
 actionfunction(shrink)
 {
-	const unsigned cnt = v->length / sizeof(eltype *);
+	const unsigned cnt = v->length / sizeof(eltype);
 
 	const unsigned n = min(r % workfactor, cnt);
 	eltype * buf = (eltype *)(v->ptr + v->offset);
