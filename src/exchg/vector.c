@@ -32,8 +32,8 @@ eltype vfelat(const vectorfile *const vf, const unsigned i)
 
 void edumpvector(const vector *const v)
 {
-	eprintf("v: %p:%u %u %u:%u ",
-		v->ptr, v->capacity, v->remapped, v->offset, v->length);
+	eprintf("v: %p.%u %u.%u ",
+		v->ptr, v->capacity, v->offset, v->length);
 }
 
 eltype * vectorexpand(
@@ -42,7 +42,10 @@ eltype * vectorexpand(
 	const unsigned plen = rc->pagelength;
 	const unsigned need = v->offset + v->length + n * sizeof(eltype);
 
-	if(need < v->capacity)
+// 	eprintf("%d. expanding. n: %u(%u); need: %u(%u)\n",
+// 		getpid(), n, n * sizeof(eltype), need, align(need, plen));
+
+	if(n == 0 || need < v->capacity)
 	{
 		return (eltype *)(v->ptr + v->offset + v->length);
 	}
@@ -63,7 +66,6 @@ eltype * vectorexpand(
 		ptr = peekmap(rc, -1, 0, align(need, plen), pmwrite);
 	}
 	
-	v->remapped = 1;
 	v->capacity = align(need, plen);
 	v->ptr = ptr;
 
@@ -74,6 +76,8 @@ void vectorshrink(const runconfig *const rc, vector *const v)
 {
 	const unsigned plen = rc->pagelength;
 	const unsigned remapoff = aligndown(v->offset, plen);
+
+	eprintf("%d. shrinking\n", getpid());
 
 	if(remapoff > 0)
 	{
@@ -94,19 +98,14 @@ void vectorupload(
 	vf->offset = v->offset;
 	vf->length = v->length;
 
-	if(v->remapped)
+	if(v->ptr && v->capacity)
 	{
-		if(pwrite(vf->fd, v->ptr, v->capacity, 0) == v->capacity)
-		{
-		}
-		else
+		if(pwrite(vf->fd,
+			v->ptr, v->capacity, 0) == v->capacity) { } else
 		{
 			fail("uploading. can't write old data");
 		}
-	}
 
-	if(v->ptr && v->capacity)
-	{
 		dropmap(rc, v->ptr, v->capacity);
 	}
 
@@ -114,7 +113,6 @@ void vectorupload(
 	v->offset = 0;
 	v->length = 0;
 	v->capacity = 0;
-	v->remapped = 0;
 }
 
 void vectordownload(
@@ -122,11 +120,18 @@ void vectordownload(
 {
 	const unsigned len = wprlength(vf->fd);
 
+	eprintf("%d. downloading\n", getpid());
+
 	if(len)
 	{
 		v->ptr = peekmap(rc, -1, 0, len, pmwrite);
+
+		if(pread(vf->fd, v->ptr, len, 0) == len) { } else
+		{
+			fail("downloading. can't read");
+		}
+
 		v->capacity = len;
-		v->remapped = 0;
 		v->offset = vf->offset;
 		v->length = vf->length;
 	}
@@ -136,6 +141,5 @@ void vectordownload(
 		v->capacity = len;
 		v->offset = 0;
 		v->length = 0;
-		v->remapped = 0;
 	}
 }

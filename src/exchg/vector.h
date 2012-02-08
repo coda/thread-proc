@@ -24,7 +24,6 @@ typedef struct
 {
 	char * ptr;
 	unsigned capacity; // overall in bytes
-	unsigned remapped;
 	unsigned offset;
 	unsigned length;
 } vector;

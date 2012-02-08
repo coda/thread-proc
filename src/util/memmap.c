@@ -62,4 +62,3 @@ void dropmap(const runconfig *const rc, void *const ptr, const unsigned len)
 		fail("can't unmap %p of length: %u", ptr, len);
 	}
 }
-

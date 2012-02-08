@@ -244,16 +244,16 @@ int main(const int argc, const char *const argv[])
 
 actionfunction(expand) // fn(rc, rl, vf, v, id, r) id
 {
-	eprintf("expand ");
-	edumpvector(v);
+// 	eprintf("expand ");
+// 	edumpvector(v);
 
 	const unsigned n = r % workfactor;
 	unsigned seed = r;
 	
 	eltype *const buf = vectorexpand(rc, v, n);
 
-	edumpvector(v);
-	eprintf("+ %u\n", n * sizeof(eltype));
+// 	edumpvector(v);
+// 	eprintf("+ %u\n", n * sizeof(eltype));
 
 	for(unsigned i = 0; i < n; i += 1)
 	{
@@ -272,7 +272,7 @@ static unsigned min(const unsigned a, const unsigned b)
 
 actionfunction(shrink)
 {
-	eprintf("shrink\n");
+//	eprintf("shrink\n");
 
 	const unsigned cnt = v->length / sizeof(eltype);
 	const unsigned n = min(r % workfactor, cnt);
@@ -297,7 +297,7 @@ actionfunction(shrink)
 
 actionfunction(exchange)
 {
-	eprintf("exchange\n");
+//	eprintf("exchange\n");
 
 	rl->nexchanges += 1;
 
