@@ -67,5 +67,5 @@ eltype heapsum(eltype *const nums, const unsigned N)
 
 eltype elrand(unsigned *const seed)
 {
-	return (eltype)1.0 / (eltype)((rand_r(seed) >> 24) + 1);
+	return rand_r(seed); // (eltype)1.0 / (eltype)((rand_r(seed) >> 24) + 1);
 }

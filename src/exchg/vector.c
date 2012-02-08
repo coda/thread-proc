@@ -77,7 +77,7 @@ void vectorshrink(const runconfig *const rc, vector *const v)
 	const unsigned plen = rc->pagelength;
 	const unsigned remapoff = aligndown(v->offset, plen);
 
-	eprintf("%d. shrinking\n", getpid());
+//	eprintf("%d. shrinking\n", getpid());
 
 	if(remapoff > 0)
 	{
@@ -120,7 +120,7 @@ void vectordownload(
 {
 	const unsigned len = wprlength(vf->fd);
 
-	eprintf("%d. downloading\n", getpid());
+//	eprintf("%d. downloading\n", getpid());
 
 	if(len)
 	{
