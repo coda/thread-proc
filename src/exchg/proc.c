@@ -161,10 +161,9 @@ static void treeroutine(const void *const arg)
 	pldrop(ra->links + 1);
 	free((void *)ra);
 
-
 	vector v = {
-		.ptr = NULL,
-		.capacity = 0,
+		.ptr = peekmap(rc, -1, 0, rc->pagelength, pmwrite),
+		.capacity = rc->pagelength,
 		.length = 0,
 		.offset = 0 };
 
@@ -244,16 +243,10 @@ int main(const int argc, const char *const argv[])
 
 actionfunction(expand) // fn(rc, rl, vf, v, id, r) id
 {
-// 	eprintf("expand ");
-// 	edumpvector(v);
-
 	const unsigned n = r % workfactor;
 	unsigned seed = r;
 	
 	eltype *const buf = vectorexpand(rc, v, n);
-
-// 	edumpvector(v);
-// 	eprintf("+ %u\n", n * sizeof(eltype));
 
 	for(unsigned i = 0; i < n; i += 1)
 	{
@@ -272,24 +265,17 @@ static unsigned min(const unsigned a, const unsigned b)
 
 actionfunction(shrink)
 {
-//	eprintf("shrink\n");
-
 	const unsigned cnt = v->length / sizeof(eltype);
 	const unsigned n = min(r % workfactor, cnt);
 
 	if(n > 0)
 	{
-		eltype * buf = (eltype *)(v->ptr + v->offset);
-
-		const eltype sum = heapsum(buf, n);
+		eltype *const buf = vectorexpand(rc, v, 1);
+		buf[0] = heapsum((eltype *)(v->ptr + v->offset), n);
 
 		v->offset += n * sizeof(eltype);
-		v->length -= n * sizeof(eltype);
- 		vectorshrink(rc, v);
-
-		buf = vectorexpand(rc, v, 1);
-		buf[0] = sum;
-		v->length += sizeof(eltype);
+		v->length -= (n - 1) * sizeof(eltype);
+		vectorshrink(rc, v);
 	}
 
 	return id;
@@ -297,8 +283,6 @@ actionfunction(shrink)
 
 actionfunction(exchange)
 {
-//	eprintf("exchange\n");
-
 	rl->nexchanges += 1;
 
 	vectorupload(rc, v, vf);

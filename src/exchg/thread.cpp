@@ -253,11 +253,10 @@ static unsigned shrink(
 	if(n > 0)
 	{
 		const eltype sum = heapsum(&vct[0], n);
+		vct.push_back(sum);
 
  		vector<eltype>::iterator b = vct.begin();
  		vct.erase(b, b + n);
-
-		vct.push_back(sum);
 	}
 
 	return id;

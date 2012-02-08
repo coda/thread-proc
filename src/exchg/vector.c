@@ -42,28 +42,18 @@ eltype * vectorexpand(
 	const unsigned plen = rc->pagelength;
 	const unsigned need = v->offset + v->length + n * sizeof(eltype);
 
-// 	eprintf("%d. expanding. n: %u(%u); need: %u(%u)\n",
-// 		getpid(), n, n * sizeof(eltype), need, align(need, plen));
-
-	if(n == 0 || need < v->capacity)
+	if(need <= v->capacity)
 	{
 		return (eltype *)(v->ptr + v->offset + v->length);
 	}
 
-	void * ptr;
-	if(v->capacity)
-	{
-		ptr = mremap(v->ptr, v->capacity,
+	void *const ptr
+		= mremap(v->ptr, v->capacity,
 			align(need, plen), MREMAP_MAYMOVE);
 
-		if(ptr != MAP_FAILED) { } else
-		{
-			fail("expanding. can't remap");
-		}
-	}
-	else
+	if(ptr != MAP_FAILED) { } else
 	{
-		ptr = peekmap(rc, -1, 0, align(need, plen), pmwrite);
+		fail("expanding. can't remap");
 	}
 	
 	v->capacity = align(need, plen);
@@ -76,8 +66,6 @@ void vectorshrink(const runconfig *const rc, vector *const v)
 {
 	const unsigned plen = rc->pagelength;
 	const unsigned remapoff = aligndown(v->offset, plen);
-
-//	eprintf("%d. shrinking\n", getpid());
 
 	if(remapoff > 0)
 	{
@@ -105,14 +93,7 @@ void vectorupload(
 		{
 			fail("uploading. can't write old data");
 		}
-
-		dropmap(rc, v->ptr, v->capacity);
 	}
-
-	v->ptr = NULL;
-	v->offset = 0;
-	v->length = 0;
-	v->capacity = 0;
 }
 
 void vectordownload(
@@ -120,26 +101,25 @@ void vectordownload(
 {
 	const unsigned len = wprlength(vf->fd);
 
-//	eprintf("%d. downloading\n", getpid());
-
-	if(len)
+	if(len <= v->capacity) { } else
 	{
-		v->ptr = peekmap(rc, -1, 0, len, pmwrite);
+		void *const ptr
+			= mremap(v->ptr, v->capacity, len, MREMAP_MAYMOVE);
 
-		if(pread(vf->fd, v->ptr, len, 0) == len) { } else
+		if(ptr != MAP_FAILED) { } else
 		{
-			fail("downloading. can't read");
+			fail("reloading. can't remap");
 		}
 
+		v->ptr = ptr;
 		v->capacity = len;
-		v->offset = vf->offset;
-		v->length = vf->length;
 	}
-	else
+
+	if(pread(vf->fd, v->ptr, len, 0) == len) { } else
 	{
-		v->ptr = NULL;
-		v->capacity = len;
-		v->offset = 0;
-		v->length = 0;
+		fail("downloading. can't get new vector");
 	}
+
+	v->offset = vf->offset;
+	v->length = vf->length;
 }
