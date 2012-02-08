@@ -32,22 +32,18 @@ eltype vfelat(const vectorfile *const vf, const unsigned i)
 
 void edumpvector(const vector *const v)
 {
-	eprintf("v: %p:%u %u:%u ",
-		v->ptr, v->capacity, v->offset, v->length);
+	eprintf("v: %p:%u %u %u:%u ",
+		v->ptr, v->capacity, v->remapped, v->offset, v->length);
 }
 
 eltype * vectorexpand(
 	const runconfig *const rc, vector *const v, const unsigned n)
 {
-// 	eprintf("expanding %u\t", n * sizeof(eltype));
-// 	edumpvector(v);
-
 	const unsigned plen = rc->pagelength;
 	const unsigned need = v->offset + v->length + n * sizeof(eltype);
 
 	if(need < v->capacity)
 	{
-//		eprintf("\n");
 		return (eltype *)(v->ptr + v->offset + v->length);
 	}
 
@@ -67,46 +63,20 @@ eltype * vectorexpand(
 		ptr = peekmap(rc, -1, 0, align(need, plen), pmwrite);
 	}
 	
+	v->remapped = 1;
 	v->capacity = align(need, plen);
 	v->ptr = ptr;
-
-//	eprintf("AFT ");
-//	edumpvector(v);
-//	eprintf("\n");
 
 	return (eltype *)(v->ptr + v->offset + v->length);
 }
 
 void vectorshrink(const runconfig *const rc, vector *const v)
 {
-// 	eprintf("shrinking\t");
-// 	edumpvector(v);
-// 	eprintf("\n");
-
 	const unsigned plen = rc->pagelength;
 	const unsigned remapoff = aligndown(v->offset, plen);
 
 	if(remapoff > 0)
 	{
-// 		void * ptr = NULL;
-// 		const unsigned remaplen = v->capacity - remapoff;
-// 		if(remaplen > 0)
-// 		{
-// 			ptr =
-// 				mremap(v->ptr + remapoff,
-// 					remaplen, remaplen, MREMAP_MAYMOVE);
-// 			
-// 			if(ptr != MAP_FAILED) { } else
-// 			{
-// 				fail("shrinking. can't remap. "
-// 					"v: %p:%u %u:%u; "
-// 					"off: %u; len: %u",
-// 					v->ptr, v->capacity,
-// 					v->offset, v->length,
-// 					remapoff, remaplen);
-// 			}
-// 		}
-
 		if(munmap(v->ptr, remapoff) == 0) { } else
 		{
 			fail("shrinking. can't unmap");
@@ -118,12 +88,13 @@ void vectorshrink(const runconfig *const rc, vector *const v)
 	}
 }
 
-void vectorupload(vector *const v, vectorfile *const vf)
+void vectorupload(
+	const runconfig *const rc, vector *const v, vectorfile *const vf)
 {
 	vf->offset = v->offset;
 	vf->length = v->length;
 
-	if(v->ptr && v->capacity)
+	if(v->remapped)
 	{
 		if(pwrite(vf->fd, v->ptr, v->capacity, 0) == v->capacity)
 		{
@@ -132,17 +103,18 @@ void vectorupload(vector *const v, vectorfile *const vf)
 		{
 			fail("uploading. can't write old data");
 		}
+	}
 
-		if(munmap(v->ptr, v->capacity) == 0) { } else
-		{
-			fail("uploading. can't unmap");
-		}
+	if(v->ptr && v->capacity)
+	{
+		dropmap(rc, v->ptr, v->capacity);
 	}
 
 	v->ptr = NULL;
 	v->offset = 0;
 	v->length = 0;
 	v->capacity = 0;
+	v->remapped = 0;
 }
 
 void vectordownload(
@@ -154,25 +126,16 @@ void vectordownload(
 	{
 		v->ptr = peekmap(rc, -1, 0, len, pmwrite);
 		v->capacity = len;
-
-		if(pread(vf->fd, v->ptr, len, 0) == len) { } else
-		{
-			fail("downloading. can't read");
-		}
-
+		v->remapped = 0;
 		v->offset = vf->offset;
 		v->length = vf->length;
-
-		wprtruncate(vf->fd, 0);
 	}
 	else
 	{
 		v->ptr = NULL;
 		v->capacity = len;
-		v->offset = vf->offset;
-		v->length = vf->length;
+		v->offset = 0;
+		v->length = 0;
+		v->remapped = 0;
 	}
-
-	vf->offset = 0;
-	vf->length = 0;
 }

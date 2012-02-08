@@ -157,8 +157,6 @@ static void treeroutine(const void *const arg)
 	const unsigned jid = ra->id;
 	elvector *const vcts = ra->tp->extra;
 
-//	eprintf("job %03u is here\n", jid);
-
 	pldrop(ra->links + 0);
 	pldrop(ra->links + 1);
 	free((void *)ra);
@@ -187,7 +185,7 @@ static void treeroutine(const void *const arg)
 
 	if(lastfn != exchange)
 	{
-		vectorupload(&v, &vcts[id].vf);
+		vectorupload(rc, &v, &vcts[id].vf);
 	}
 
 	rlwrite(&rl, (unsigned)-1);
@@ -203,19 +201,13 @@ int main(const int argc, const char *const argv[])
 		= peekmap(rc, -1, 0, rc->nworkers * sizeof(elvector),
 			pmshared | pmwrite);
 
-//	eprintf("ready to fill\n");
-
-
 	for(unsigned i = 0; i < rc->nworkers; i += 1)
 	{
 		vcts[i].vf = (vectorfile){
 			.fd = makeshm(rc, 0), .length = 0, .offset = 0 };
 	}
 
-//	eprintf("ready to run\n");
-
 	fflush(stdout);
-	fflush(stderr);
 
 	disablesigpipe();
 
@@ -252,12 +244,16 @@ int main(const int argc, const char *const argv[])
 
 actionfunction(expand) // fn(rc, rl, vf, v, id, r) id
 {
-//	eprintf("expand\n");
+	eprintf("expand ");
+	edumpvector(v);
 
 	const unsigned n = r % workfactor;
 	unsigned seed = r;
 	
 	eltype *const buf = vectorexpand(rc, v, n);
+
+	edumpvector(v);
+	eprintf("+ %u\n", n * sizeof(eltype));
 
 	for(unsigned i = 0; i < n; i += 1)
 	{
@@ -265,10 +261,6 @@ actionfunction(expand) // fn(rc, rl, vf, v, id, r) id
 	}
 
 	v->length += n * sizeof(eltype);
-
-// 	eprintf("AFT ");
-// 	edumpvector(v);
-// 	eprintf("\n");
 
 	return id;
 }
@@ -280,14 +272,10 @@ static unsigned min(const unsigned a, const unsigned b)
 
 actionfunction(shrink)
 {
-//	eprintf("shrink\n");
+	eprintf("shrink\n");
 
 	const unsigned cnt = v->length / sizeof(eltype);
 	const unsigned n = min(r % workfactor, cnt);
-
-// 	eprintf("shrink %u elems of len %u\n", n, n * sizeof(eltype));
-// 	edumpvector(v);
-// 	eprintf("\n");
 
 	if(n > 0)
 	{
@@ -309,20 +297,11 @@ actionfunction(shrink)
 
 actionfunction(exchange)
 {
-//	eprintf("exchange\n");
+	eprintf("exchange\n");
 
 	rl->nexchanges += 1;
 
-//	edumpvector(v);
-	vectorupload(v, vf);
-//	edumpvector(v);
-
-// 	if(vf->length)
-// 	{
-// 		eprintf("%f\n", vfelat(vf, 0));
-// 	}
-
-//	eprintf("xchg: uploaded\n");
+	vectorupload(rc, v, vf);
 
 	rlwrite(rl, id);
 	const unsigned i = rlread(rl);
@@ -331,10 +310,7 @@ actionfunction(exchange)
 	{
 		vectorfile *const ivf = &(((elvector *)vf) - id + i)->vf;
 		vectordownload(rc, ivf, v);
-//		edumpvector(v);
 	}
-
-//	eprintf("\n");
 
 	return i;
 }

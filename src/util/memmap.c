@@ -56,7 +56,7 @@ void * peekmap(
 
 void dropmap(const runconfig *const rc, void *const ptr, const unsigned len)
 {
-	size_t plen = align(len, rc->pagelength);
+	const size_t plen = align(len, rc->pagelength);
 	if(munmap(ptr, plen) == 0) { } else
 	{
 		fail("can't unmap %p of length: %u", ptr, len);

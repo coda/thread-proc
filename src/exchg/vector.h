@@ -24,6 +24,7 @@ typedef struct
 {
 	char * ptr;
 	unsigned capacity; // overall in bytes
+	unsigned remapped;
 	unsigned offset;
 	unsigned length;
 } vector;
@@ -34,7 +35,8 @@ extern eltype * vectorexpand(
 
 extern void vectorshrink(const runconfig *const rc, vector *const v);
 
-extern void vectorupload(vector *const v, vectorfile *const vf);
+extern void vectorupload(
+	const runconfig *const rc, vector *const v, vectorfile *const vf);
 
 extern void vectordownload(
 	const runconfig *const rc, vectorfile *const vf, vector *const v);
