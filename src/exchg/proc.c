@@ -234,6 +234,11 @@ int main(const int argc, const char *const argv[])
 		}
 	}
 
+	for(unsigned i = 0; i < rc->nworkers; i += 1)
+	{
+		dropshm(vcts[i].vf.fd);
+	}
+
 	freeconfig((runconfig *)tp.rc);
 	
 	return 0;

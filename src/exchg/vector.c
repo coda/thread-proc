@@ -94,6 +94,8 @@ void vectorupload(
 			fail("uploading. can't write old data");
 		}
 	}
+
+	wprtruncate(vf->fd, v->capacity);
 }
 
 void vectordownload(
