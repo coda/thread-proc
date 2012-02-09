@@ -88,12 +88,12 @@ static void multroutine(const void *const arg)
 
 	const eltype *const a
 		= (const eltype *)peekmap(rc, ws->fda,
-			al.mapoffset, al.maplength, 0)
+			al.mapoffset, al.maplength, pmshared)
 		+ adiff;
 
 	const eltype *const b
 		= (const eltype *)peekmap(rc, ws->fdb,
-			bl.mapoffset, bl.maplength, 0);
+			bl.mapoffset, bl.maplength, pmshared);
 
 	eltype *const r
 		= (eltype *)peekmap(rc, ws->fdr,

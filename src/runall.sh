@@ -7,7 +7,7 @@ szmatmul=2 # will be multiplied by 2^9
 italloc=4 # will be multiplied by 2^20
 itexchg=64 # will be multiplied by 2^10
 
-fifo="/tmp/tp-test.$$"
+fifo="./bench-fifo.$$"
 base="$(dirname $0)"
 
 function formatout() \
@@ -53,55 +53,55 @@ function testone() \
 
 			(eval time ./"$cmd" $nw $args) 2>"$fifo" >/dev/null &
 			t=$(cat "$fifo" | awk '/^real.*/ {print $2}')
+
 			wait $! || t="FAIL"
 
-#			echo $t
 			info[${#info[@]}]="$t"
 		done
 
 		formatout "${info[@]}"
 	done
 
-	exit
-
-	while [ "$1" != '--' ]
-	do
-		prgs[${#prgs[@]}]="$1"
-		shift
-	done
-
-	shift
-	args=("$@")
-
-	for((nw = 1; nw <= $UPTO; nw <<= 2))
-	do
-		exectimes=()
-
-		for i in "${prgs[@]}"
-		do
-			echo "warming with: ./$i $nw ${args[@]}" 1>&2
-
-			{ time ./$i $nw ${args[@]}; } &> /dev/null
-
-			echo "testing with: ./$i $nw ${args[@]}" 1>&2
-				
-			t=$({ time ./$i $nw ${args[@]}; } 2>&1 > /dev/null \
-				| awk '/^real.*/ {print $2}')
-			
-			exectimes[${#exectimes[@]}]="$t"
-		done
-
-		echo -n "$nw"
-		for((i = 0; i < ${#prgs[@]}; i += 1))
-		do
-			echo -ne "\t${prgs[i]}: ${exectimes[i]}"
-		done
-		echo
-	done	
+# 	exit
+# 
+# 	while [ "$1" != '--' ]
+# 	do
+# 		prgs[${#prgs[@]}]="$1"
+# 		shift
+# 	done
+# 
+# 	shift
+# 	args=("$@")
+# 
+# 	for((nw = 1; nw <= $UPTO; nw <<= 2))
+# 	do
+# 		exectimes=()
+# 
+# 		for i in "${prgs[@]}"
+# 		do
+# 			echo "warming with: ./$i $nw ${args[@]}" 1>&2
+# 
+# 			{ time ./$i $nw ${args[@]}; } &> /dev/null
+# 
+# 			echo "testing with: ./$i $nw ${args[@]}" 1>&2
+# 				
+# 			t=$({ time ./$i $nw ${args[@]}; } 2>&1 > /dev/null \
+# 				| awk '/^real.*/ {print $2}')
+# 			
+# 			exectimes[${#exectimes[@]}]="$t"
+# 		done
+# 
+# 		echo -n "$nw"
+# 		for((i = 0; i < ${#prgs[@]}; i += 1))
+# 		do
+# 			echo -ne "\t${prgs[i]}: ${exectimes[i]}"
+# 		done
+# 		echo
+# 	done	
 )
 
-mkfifo "$fifo"
 cd "$base"
+mkfifo "$fifo"
 
 while test "$1" != '';
 do
@@ -122,15 +122,27 @@ echo -e "testing with:\n" \
 	"\tmatrix size: $szmatmul * 512\n" \
 	"\talloc iterations: $italloc * 1024 * 1024\n" \
 	"\texchange iterations: $itexchg * 1024\n" \
-	"\taffinity: $(taskset -p $$)"
+	"\taffinity: $(taskset -p $$)\n" \
+	"\tsystem: $(uname -ro)\n" \
+	"\tlibc: $(/lib/libc.* | head -n 1)\n" \
+	"\tcpu: $(grep 'model name' /proc/cpuinfo \
+		| sed -ne 's/.*: \(.*\)/\1/g p' | uniq -c)"
 
 sz=$((szmatmul * 512))
 echo -e "\nrow-stored matrix multiplication. size: $sz"
-
 testone "T mnt $sz" "P mnp $sz" "P-FS mnpf $sz" \
 	"HP.P mnp $sz $((2 << 20))" "HP.P-FS mnpf $sz $((2 << 20))"
 
+echo -e "\ntile-stored matrix multiplication. size: $sz"
+testone "T mtt $sz" "P mtp $sz" "P-FS mtpf $sz" \
+	"HP.P mtp $sz $((2 << 20))" "HP.P-FS mtpf $sz $((2 << 20))"
+
 it=$(($italloc * 1024 * 1024))
 echo -e "\nallocation. iterations: $it"
+testone "T at $sz" "P ap $sz"
+
+it=$(($itexchg * 1024))
+echo -e "\nexchanges. iterations: $it"
+testone "T et $sz" "P ep $sz"
 
 rm "$fifo"
