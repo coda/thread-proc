@@ -26,12 +26,10 @@ test -d "$bld" || { echo "no build directory: $bld"; false; }
 test -d "$bld" || echo "no foreign modules directory: $foreign"
 
 case "$toolchain" in
-
 gcc);;
 gcc-nolto);;
 clang);;
 *) echo "toolchain should be one of: gcc gcc-nolto clang"; false
-
 esac
 
 bld="$(cd "$bld" && pwd)"
