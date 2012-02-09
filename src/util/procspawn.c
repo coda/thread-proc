@@ -58,8 +58,8 @@ static void setaffinity(const pid_t p, const runconfig *const rc,
 {
 	unsigned char coresetbytes[CPU_ALLOC_SIZE(rc->ncores)];
 	cpu_set_t *const coreset = (cpu_set_t *)coresetbytes;
-	CPU_ZERO_S(sizeof(coreset), coreset);
-	CPU_SET_S(rc->corelist[id % rc->ncores], sizeof(coreset), coreset);
+	CPU_ZERO_S(sizeof(coresetbytes), coreset);
+	CPU_SET_S(rc->corelist[id % rc->ncores], sizeof(coresetbytes), coreset);
 
 	if(sched_setaffinity(p, sizeof(coreset), coreset) == 0) { } else
 	{

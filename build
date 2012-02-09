@@ -2,18 +2,46 @@ set -e
 
 base="$(dirname "$0")"
 
-fgn="$base/foreign"
-bld="/tmp/tp"
+bld="$base/bld"
+foreign="$base/foreign"
+toolchain=gcc
+debug=no
+makejobs=5
+
+while test "$1" != ''
+do
+	case "$1" in
+	
+	'-d') debug=yes;;
+	'-b') shift; bld="$1";;
+	'-t') shift; toolchain="$1";;
+	'-j') shift; if test "$1" -gt 0; then makejobs="$1"; fi
+	
+	esac
+
+	shift
+done
+
+test -d "$bld" || { echo "no build directory: $bld"; false; }
+test -d "$bld" || echo "no foreign modules directory: $foreign"
+
+case "$toolchain" in
+
+gcc);;
+gcc-nolto);;
+clang);;
+*) echo "toolchain should be one of: gcc gcc-nolto clang"; false
+
+esac
 
 bld="$(cd "$bld" && pwd)"
-fgn="$(cd "$fgn" && pwd)"
-tcn="gcc"
+fgn="$(cd "$foreign" && pwd)"
 
-makecmd="make -j 5 -f gnu.mk bld='$bld' foreign='$fgn' toolchain='$tcn'"
+makecmd="make -j $makejobs -f gnu.mk \
+	bld='$bld' foreign='$fgn' toolchain='$toolchain'"
 
-if test "$1" = DBG
-then
-	makecmd+=" debug=1"
-fi
+test "$debug" = yes && makecmd+=' debug=1'
+
+# echo $makecmd
 
 (cd "$base/src" && eval "$makecmd")
