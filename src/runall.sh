@@ -42,21 +42,20 @@ function testone() \
 
 	formatout "${header[@]}"
 
-	for((nw = 1; nw <= 2; nw <<= 1))
+	for((nw = 1; nw <= $upto; nw <<= 1))
 	do
 		info=($nw)
 
 		for((i = 0; i < ${#commands[@]}; i += 1))
 		do
-			echo ./"${commands[$i]}" $nw ${arguments[$i]}
+			cmd="${commands[$i]}"
+			args="${arguments[$i]}"
 
-			(time ./"${commands[$i]}" $nw ${arguments[$i]}) \
-				2>"$fifo" &
-
+			(eval time ./"$cmd" $nw $args) 2>"$fifo" >/dev/null &
 			t=$(cat "$fifo" | awk '/^real.*/ {print $2}')
-
 			wait $! || t="FAIL"
 
+#			echo $t
 			info[${#info[@]}]="$t"
 		done
 
