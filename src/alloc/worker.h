@@ -9,9 +9,7 @@ typedef struct rnodetag
 	struct rnodetag* prev;
 } rnode;
 
-#define NRINGS 256
-
-extern const unsigned nrings;
+enum { nrings = 256 };
 
 extern void worker(const runconfig *const rc, rnode * rings[],
 	const unsigned id);

@@ -84,7 +84,6 @@ void matdump(
 
 	for(unsigned i = rbase; i < rbase + rlen; i += 1)
 	{
-//		printf("\t");
 		for(unsigned j = cbase; j < cbase + clen; j += 1)
 		{
 			printf("%f ", (double)matat(araw, n, i, j, tr, tc));

@@ -1,7 +1,6 @@
 #include <exchg/vector.h>
 #include <exchg/wrapper.h>
 #include <util/echotwo.h>
-#include <util/memmap.h>
 #include <unistd.h>
 #include <sys/mman.h>
 
@@ -28,12 +27,6 @@ eltype vfelat(const vectorfile *const vf, const unsigned i)
 	}
 
 	return value;
-}
-
-void edumpvector(const vector *const v)
-{
-	eprintf("v: %p.%u %u.%u ",
-		v->ptr, v->capacity, v->offset, v->length);
 }
 
 eltype * vectorexpand(

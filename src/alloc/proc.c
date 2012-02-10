@@ -7,7 +7,7 @@
 
 #include <sched.h>
 
-static rnode * rings[NRINGS];
+static rnode * rings[nrings];
 
 static void routine(const void *const arg)
 {
@@ -26,6 +26,7 @@ int main(const int argc, const char *const argv[])
 		.rc = formconfig(argc, argv, 64, 1024 * 1024) };
 
 	treespawn(&tp);
+
 	freeconfig((runconfig *)tp.rc);
 
 	return 0;

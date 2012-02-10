@@ -1,6 +1,6 @@
 ebld = $(bld)/exchg
 
-esrc = heapsum.c vector.c ringlink.c util.c nixwrapper.c \
+esrc = heapsum.c vector.c ringlink.c nixwrapper.c \
 	ringtest-proc.c ringtest-thread.c \
 	proc.c 
 

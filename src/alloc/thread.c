@@ -31,6 +31,7 @@ int main(const int argc, const char *const argv[])
 		.rc = formconfig(argc, argv, 64, 1024 * 1024) };
 
 	treespawn(&tp);
+
 	freeconfig((runconfig *)tp.rc);
 
 	return 0;

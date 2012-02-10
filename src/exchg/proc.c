@@ -225,7 +225,7 @@ int main(const int argc, const char *const argv[])
 		const unsigned len = vcts[i].vf.length / sizeof(eltype);
 		if(len)
 		{
-			printf("\t%f\t%u of %u\n",
+			printf("%f\t%u of %u\n",
 				(double)vfelat(&vcts[i].vf, len/2), len/2, len);
 		}
 		else

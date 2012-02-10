@@ -23,14 +23,14 @@ void matmul(
 			l, m, n, tc, tr);
 	}
 
-	const eltype (*const a)[m / tc][tr][tc]
-		= (const eltype (*const)[m / tc][tr][tc])araw;
+	const eltype (*const a)[m/tc][tr][tc]
+		= (const eltype (*const)[m/tc][tr][tc])araw;
 	
-	const eltype (*const b)[n / tr][tc][tr]
-		= (const eltype (*const)[n / tr][tc][tr])braw;
+	const eltype (*const b)[n/tr][tc][tr]
+		= (const eltype (*const)[n/tr][tc][tr])braw;
 
-	eltype (*const r)[n / tr][tr][tr]
-		= (eltype (*const)[n / tr][tr][tr])rraw;
+	eltype (*const r)[n/tr][tr][tr]
+		= (eltype (*const)[n/tr][tr][tr])rraw;
 
 	for(unsigned i = baserow; i < baserow + l; i += 1)
 	for(unsigned j = 0; j < n; j += 1)
@@ -76,8 +76,8 @@ void matfill(
 
 	const unsigned tr = tilecount / tc;
 
-	eltype (*const a)[m / tc][tr][tc] =
-		(eltype (*const)[m / tc][tr][tc])araw;
+	eltype (*const a)[m/tc][tr][tc] =
+		(eltype (*const)[m/tc][tr][tc])araw;
 
 	for(unsigned i = baserow; i < baserow + l; i += 1)
 	for(unsigned j = 0; j < m; j += 1)
@@ -124,7 +124,6 @@ void matdump(
 
 	for(unsigned i = rbase; i < rbase + rlen; i += 1)
 	{
-//		printf("\t");
 		for(unsigned j = cbase; j < cbase + clen; j += 1)
 		{
 			printf("%f ", (double)matat(araw, n, i, j, tr, tc));

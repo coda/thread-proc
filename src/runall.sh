@@ -88,7 +88,7 @@ echo -e "testing with:\n" \
 	"\taffinity: $(taskset -cp $$)\n" \
 	"\tsystem: $(uname -ro)\n" \
 	"\tlibc: $(/lib/libc.* | head -n 1)\n" \
-	"\tcpu: $(grep 'model name' /proc/cpuinfo \
+	"\tcores: $(grep 'model name' /proc/cpuinfo \
 		| sed -ne 's/.*: \(.*\)/\1/g p' | uniq -c)"
 
 hp=$((2<<20))

@@ -194,7 +194,7 @@ static void process(const runconfig *const rc)
 		const unsigned long len = arrays[i].v.size();
 		if(len)
 		{
-			printf("\t%f\t%lu of %lu\n",
+			printf("%f\t%lu of %lu\n",
 				(double)arrays[i].v[len/2], len/2, len);
 		}
 		else

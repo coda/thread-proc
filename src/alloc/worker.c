@@ -4,7 +4,6 @@
 #include <stdlib.h>
 #include <stdio.h>
 
-const unsigned nrings = NRINGS;
 static const unsigned stepfactor = 1;
 
 static void freering(rnode *const rn)
@@ -72,28 +71,6 @@ static void freenode(rnode **const rp, unsigned n)
 	}
 }
 
-static void dumpring(rnode* rn)
-{
-	return; 
-
-	if(rn != NULL)
-	{
-		rnode* r;
-		for(r = rn; r->next != rn; r = r->next)
-		{
-			eprintf("N. %p: %p - %p\n",
-				(void *)r, (void *)r->prev, (void *)r->next);
-		}
-		eprintf("N. %p: %p - %p\n",
-			(void *)r, (void *)r->prev, (void *)r->next);
-
-	}
-	else
-	{
-		eprintf("NULL\n");
-	}
-}
-
 static void makenode(rnode **const rp, unsigned n)
 {
 	rnode* r = *rp;
@@ -120,8 +97,6 @@ static void makenode(rnode **const rp, unsigned n)
 	{
 		fail("can't make node");
 	}
-
-	dumpring(*rp);
 }
 
 static void (*const operations[])(rnode **const, unsigned int) =
