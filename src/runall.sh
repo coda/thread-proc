@@ -89,7 +89,7 @@ function showcores() \
 function showhuge() \
 (
 	printf "%s %s" "$(ls /sys/kernel/mm/hugepages 2>/dev/null)" \
-		"$(cat /sys/kernel/mm/transparent_hugepage/enabled)"
+		"$(cat /sys/kernel/mm/*transparent_hugepage/enabled)"
 )
 
 echo -e "testing with:\n" \
