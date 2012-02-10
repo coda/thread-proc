@@ -70,15 +70,27 @@ while test "$1" != '';
 do
 	case "$1" in
 
-	'-u') shift; if test "$1" -gt 0; then upto=$1; fi;;
-	'-m') shift; if test "$1" -gt 0; then szmatmul=$1; fi;;
-	'-a') shift; if test "$1" -gt 0; then italloc=$1; fi;;
-	'-e') shift; if test "$1" -gt 0; then itexchg=$1; fi;;
+	'-u') shift; test "$1" -gt 0 && upto=$1;;
+	'-m') shift; test "$1" -gt 0 && szmatmul=$1;;
+	'-a') shift; test "$1" -gt 0 && italloc=$1;;
+	'-e') shift; test "$1" -gt 0 && itexchg=$1;;
 
 	esac
 
 	shift
 done
+
+function showcores() \
+(
+	printf "%s" "$(grep 'model name' /proc/cpuinfo | uniq -c \
+		| sed -ne 's/.*\([0-9]\+\).*model name.*: \(.*\)/\1 on \2/g p')"
+)
+
+function showhuge() \
+(
+	printf "%s %s" "$(ls /sys/kernel/mm/hugepages 2>/dev/null)" \
+		"$(cat /sys/kernel/mm/transparent_hugepage/enabled)"
+)
 
 echo -e "testing with:\n" \
 	"\tup to: $upto jobs\n" \
@@ -86,10 +98,10 @@ echo -e "testing with:\n" \
 	"\talloc iterations: $italloc * 1024 * 1024\n" \
 	"\texchange iterations: $itexchg * 1024\n" \
 	"\taffinity: $(taskset -cp $$)\n" \
+	"\tcores: $(showcores)\n" \
 	"\tsystem: $(uname -ro)\n" \
-	"\tlibc: $(/lib/libc.* | head -n 1)\n" \
-	"\tcores: $(grep 'model name' /proc/cpuinfo \
-		| sed -ne 's/.*: \(.*\)/\1/g p' | uniq -c)"
+	"\thuge pages: $(showhuge)\n" \
+	"\tlibc: $(/lib/libc.* | head -n 1)" 
 
 hp=$((2<<20))
 sz=$((szmatmul * 512))

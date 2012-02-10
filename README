@@ -15,7 +15,7 @@
 		в корне дерева исходных текстов тестов:
 
 		$ cd thread-proc
-		$ sh foreign-up git://github.com/coda/
+		$ sh foreign-up git://github.com/coda
 
 		Аргумент для foreign-up -- это путь для поиска модулей и он
 		должен совпадать с указанным, если Вы не разместили
