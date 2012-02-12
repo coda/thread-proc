@@ -15,7 +15,7 @@ do
 	'-d') debug=yes;;
 	'-b') shift; bld="$1";;
 	'-t') shift; toolchain="$1";;
-	'-j') shift; if test "$1" -gt 0; then makejobs="$1"; fi
+	'-j') shift; test "$1" -gt 0 && makejobs="$1";;
 	
 	esac
 
@@ -23,7 +23,7 @@ do
 done
 
 test -d "$bld" || { echo "no build directory: $bld"; false; }
-test -d "$bld" || echo "no foreign modules directory: $foreign"
+test -d "$bld" || { echo "no foreign modules directory: $foreign"; false; }
 
 case "$toolchain" in
 gcc);;
@@ -34,11 +34,10 @@ esac
 
 bld="$(cd "$bld" && pwd)"
 fgn="$(cd "$foreign" && pwd)"
+tcn="$toolchain"
 
-makecmd="make -j $makejobs bld='$bld' foreign='$fgn' toolchain='$toolchain'"
+mkcmd="make -j $makejobs -f gnu.mk bld='$bld' foreign='$fgn' toolchain='$tcn'"
 
-test "$debug" = yes && makecmd+=' debug=Y'
+test "$debug" = yes && mkcmd+=' debug=Y'
 
-# echo $makecmd
-
-(cd "$base/src" && eval "$makecmd")
+(cd "$base/src" && eval "$mkcmd")
