@@ -35,10 +35,9 @@ esac
 bld="$(cd "$bld" && pwd)"
 fgn="$(cd "$foreign" && pwd)"
 
-makecmd="make -j $makejobs -f gnu.mk \
-	bld='$bld' foreign='$fgn' toolchain='$toolchain'"
+makecmd="make -j $makejobs bld='$bld' foreign='$fgn' toolchain='$toolchain'"
 
-test "$debug" = yes && makecmd+=' debug=1'
+test "$debug" = yes && makecmd+=' debug=Y'
 
 # echo $makecmd
 
