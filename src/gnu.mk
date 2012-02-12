@@ -1,4 +1,4 @@
-include $(foreign)/mkenv/common.mk
+include $(foreign)/mkenv/gnu/common.mk
 
 cflags += -D_POSIX_C_SOURCE=200809 -D_GNU_SOURCE
 
