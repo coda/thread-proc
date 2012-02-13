@@ -100,7 +100,7 @@ void treespawn(const treeplugin *const tp)
 	else
 	{
 		if(setpgid(0, 0) == 0) { } else
-		{
+ 		{
 			fail("can't set proc tree group");
 		}
 

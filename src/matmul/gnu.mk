@@ -1,9 +1,10 @@
-mbld = $(bld)/matmul
+mbld = $(call bldpath)
 msrc = naivemul.c tilemul.c element.c muljob.c thread.c proc.c proconfs.c
 mobj = $(call c2o,$(mbld),$(msrc))
-mbin = $(addprefix $(bld)/bin/,mnt mtt mnp mtp mnpf mtpf)
+mbin = $(addprefix $(bld)/bin/,mnt mtt mntm mttm mnp mtp mnpf mtpf)
 
 mtcommon = $(ucommon) $(ubld)/threadspawn.o
+mtmcommon = $(mtcommon) $(ubld)/memmap.o
 mpcommon = $(ucommon) $(ubld)/procspawn.o $(ubld)/memmap.o
 mpfcommon = $(mpcommon) $(ubld)/memfile.o
 
@@ -19,6 +20,11 @@ $(bld)/bin/mnt \
 $(bld)/bin/mtt: lflags += -pthread
 $(bld)/bin/mnt: $(mbld)/thread.o $(naive) $(mtcommon)
 $(bld)/bin/mtt: $(mbld)/thread.o $(tile) $(mtcommon)
+
+$(bld)/bin/mntm	\
+$(bld)/bin/mttm: lflags += -pthread
+$(bld)/bin/mntm: $(mbld)/threadonmap.o $(naive) $(mtmcommon)
+$(bld)/bin/mttm: $(mbld)/threadonmap.o $(tile) $(mtmcommon)
  
 $(bld)/bin/mnp: $(mbld)/proc.o $(naive) $(mpcommon)
 $(bld)/bin/mtp: $(mbld)/proc.o $(tile) $(mpcommon)

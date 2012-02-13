@@ -2,10 +2,17 @@
 
 set -e
 
+declare -i upto
+declare -i szmatmul
+declare -i italloc
+declare -i itexchg
+declare -i hplen
+
 upto=512 
-szmatmul=2 # will be multiplied by 2^9
-italloc=4 # will be multiplied by 2^20
-itexchg=64 # will be multiplied by 2^10
+szmatmul=2	# will be multiplied by 2^9
+italloc=4	# will be multiplied by 2^20
+itexchg=64	# will be multiplied by 2^10
+hplen=2048	# will be multiplied by 2^10 
 
 fifo="./bench-fifo.$$"
 base="$(dirname $0)"
@@ -14,7 +21,7 @@ function formatout() \
 (
 	while test "$1" != ''
 	do
-		printf "% 12s" "$1"
+		echo -ne "\t$1"
 		shift
 	done
 	echo
@@ -22,6 +29,7 @@ function formatout() \
 
 function testone() \
 (
+	
 	header=(N)
 	commands=()
 	arguments=()
@@ -52,9 +60,16 @@ function testone() \
 			args="${arguments[$i]}"
 
 			(eval time ./"$cmd" $nw $args) 2>"$fifo" >/dev/null &
-			t=$(cat "$fifo" | awk '/^real.*/ {print $2}')
+			echo $!
+			trap "echo -e '\nterminating $!' && kill $! && echo killed" EXIT
+
+			t=$(cat "$fifo" | awk '/^real.*/ {print $2}' \
+				| sed -ne 's/m/*60 + /g; s/s/\n/g p' | bc)
+			
 
 			wait $! || t="FAIL"
+
+			trap - EXIT
 
 			info[${#info[@]}]="$t"
 		done
@@ -70,10 +85,11 @@ while test "$1" != '';
 do
 	case "$1" in
 
-	'-u') shift; test "$1" -gt 0 && upto=$1;;
-	'-m') shift; test "$1" -gt 0 && szmatmul=$1;;
-	'-a') shift; test "$1" -gt 0 && italloc=$1;;
-	'-e') shift; test "$1" -gt 0 && itexchg=$1;;
+	'-u') shift; upto="$1";;
+	'-m') shift; szmatmul="$1";;
+	'-a') shift; italloc="$1";;
+	'-e') shift; itexchg="$1";;
+	'-hp') shift; hplen="$1";;
 
 	esac
 
@@ -103,23 +119,55 @@ echo -e "testing with:\n" \
 	"\thuge pages: $(showhuge)\n" \
 	"\tlibc: $(/lib/libc.* | head -n 1)" 
 
-hp=$((2<<20))
-sz=$((szmatmul * 512))
+function emitmatmul() \
+(
+	local -A mcmds=( \
+		[naive]='([T]=mnt [T-M]=mntm [P]=mnp [P-FS]=mnpf)' \
+		[tile]='([T]=mtt [T-M]=mttm [P]=mtp [P-FS]=mtpf)' )
 
-echo -e "\nrow-stored matrix multiplication. size: $sz"
-testone "T mnt $sz" "P mnp $sz" "P-FS mnpf $sz" \
-	"HP.P mnp $sz $hp" "HP.P-FS mnpf $sz $hp"
+	local -A mcmd=${mcmds[$1]}
 
-echo -e "\ntile-stored matrix multiplication. size: $sz"
-testone "T mtt $sz" "P mtp $sz" "P-FS mtpf $sz" \
-	"HP.P mtp $sz $hp" "HP.P-FS mtpf $sz $hp"
+	tcmd='testone'
 
-it=$(($italloc * 1024 * 1024))
-echo -e "\nallocation. iterations: $it"
-testone "T at $it" "P ap $it"
+	for i in T T-M P P-FS
+	do
+		tcmd+=" '$i ${mcmd[$i]} $sz'"
+	done
 
-it=$(($itexchg * 1024))
-echo -e "\nexchanges. iterations: $it"
-testone "T et $it" "P ep $it"
+	if test $hplen -gt 0
+	then
+		hp=$(($hplen << 10))
+		for i in T-M P P-FS
+		do
+			tcmd+=" 'HP.$i ${mcmd[$i]} $sz $hp'"
+		done
+	fi
+	echo "$tcmd"
+)
+
+if test $szmatmul -gt 0
+then
+	sz=$((szmatmul * 512))
+
+	echo -e "\nrow-stored matrix multiplication. size: $sz"
+	eval $(emitmatmul naive)
+
+	echo -e "\ntile-stored matrix multiplication. size: $sz"
+	eval $(emitmatmul tile)
+fi
+
+if test $italloc -gt 0
+then
+	local -i it=$(($italloc * 1024 * 1024))
+	echo -e "\nallocation. iterations: $it"
+	testone "T at $it" "P ap $it"
+fi
+
+if $itexchg -gt 0
+then
+	local -i it=$(($itexchg * 1024))
+	echo -e "\nexchanges. iterations: $it"
+	testone "T et $it" "P ep $it"
+fi
 
 rm "$fifo"
