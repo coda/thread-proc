@@ -39,11 +39,6 @@ static void multroutine(const void *const arg)
 	const eltype *const a = ws->a + al.baseoffset / sizeof(eltype);
 	eltype *const r = ws->r + rl.baseoffset / sizeof(eltype);
 
-	if(ia->id == rc->nworkers - 1)
-	{
-		fail("FAIL");
-	}
-
 	matmul(a, ws->b, al.baserow, al.nrows, m, n, r);
 
 	printf("mult %u with %u rows is done on core %d\n", id, al.nrows,

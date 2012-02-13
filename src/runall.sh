@@ -1,6 +1,6 @@
 #!/bin/sh
 
-set -e
+set -me
 
 declare -i upto
 declare -i szmatmul
@@ -29,6 +29,9 @@ function formatout() \
 
 function testone() \
 (
+	set -me
+
+	trap "echo && jobs && kill -INT %1 && echo interrupted" INT
 	
 	header=(N)
 	commands=()
@@ -59,19 +62,16 @@ function testone() \
 			cmd="${commands[$i]}"
 			args="${arguments[$i]}"
 
-			(eval time ./"$cmd" $nw $args) 2>"$fifo" >/dev/null &
-			echo $!
-			trap "echo -e '\nterminating $!' && kill $! && echo killed" EXIT
+			time ./$cmd $nw $args 2>"$fifo" >/dev/null &
 
-			t=$(cat "$fifo" | awk '/^real.*/ {print $2}' \
-				| sed -ne 's/m/*60 + /g; s/s/\n/g p' | bc)
-			
-
+			t=$(cat "$fifo" \
+				| awk '/^real.*/ {print $2}' \
+				| sed -ne 's/m/*60 + /g; s/s/\n/g p' \
+				| bc)
+		
 			wait $! || t="FAIL"
 
-			trap - EXIT
-
-			info[${#info[@]}]="$t"
+			info[${#info[@]}]=$t
 		done
 
 		formatout "${info[@]}"
@@ -80,6 +80,7 @@ function testone() \
 
 cd "$base"
 mkfifo "$fifo"
+trap "echo -e '\nexiting'; rm '$fifo'" EXIT
 
 while test "$1" != '';
 do
@@ -169,5 +170,3 @@ then
 	echo -e "\nexchanges. iterations: $it"
 	testone "T et $it" "P ep $it"
 fi
-
-rm "$fifo"

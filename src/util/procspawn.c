@@ -99,10 +99,10 @@ void treespawn(const treeplugin *const tp)
 	}
 	else
 	{
-		if(setpgid(0, 0) == 0) { } else
- 		{
-			fail("can't set proc tree group");
-		}
+// 		if(setpgid(0, 0) == 0) { } else
+//  		{
+// 			fail("can't set proc tree group");
+// 		}
 
 		if(on_exit(cancelonfail, NULL) == 0) { } else
 		{
@@ -198,5 +198,4 @@ void * makeidargument(
 
 void dropidargument(void *const arg)
 {
-//	free(arg);
 }
