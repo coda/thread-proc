@@ -18,21 +18,44 @@ fifo="./bench-fifo.$$"
 base="$(dirname $0)"
 
 function formatout() \
-(
+{
 	while test "$1" != ''
 	do
-		echo -ne "\t$1"
+		printf "% 8s |" "$1"
 		shift
 	done
 	echo
+}
+
+function recalc() \
+{ 
+	awk '/^real.*/ { print $2 }' | sed -ne 's/m/*60 + /g; s/s/\n/g p' | bc
+}
+
+function runsingle() \
+(
+	set -m
+	trap "kill -INT %1" INT
+
+	local -i i=$1
+	local -i nw=$2
+
+	local cmd="${commands[$i]}"
+	local args="${arguments[$i]}"
+
+#	echo ./$cmd $nw $args 1>&2
+	
+	# give some time for plumbing to settle
+	( sleep 1s;
+		eval time ./$cmd $nw $args ) 1>/dev/null 2>"$fifo" &
+
+	t=$(cat "$fifo" | recalc)
+	wait $! || t="FAIL"
+	echo $t
 )
 
 function testone() \
-(
-	set -me
-
-	trap "echo && jobs && kill -INT %1 && echo interrupted" INT
-	
+{
 	header=(N)
 	commands=()
 	arguments=()
@@ -55,32 +78,19 @@ function testone() \
 
 	for((nw = 1; nw <= $upto; nw <<= 1))
 	do
-		info=($nw)
-
+		info=($nw);
 		for((i = 0; i < ${#commands[@]}; i += 1))
 		do
-			cmd="${commands[$i]}"
-			args="${arguments[$i]}"
-
-			time ./$cmd $nw $args 2>"$fifo" >/dev/null &
-
-			t=$(cat "$fifo" \
-				| awk '/^real.*/ {print $2}' \
-				| sed -ne 's/m/*60 + /g; s/s/\n/g p' \
-				| bc)
-		
-			wait $! || t="FAIL"
-
-			info[${#info[@]}]=$t
-		done
+			info[${#info[@]}]=$(runsingle $i $nw 2>/dev/null)
+		done; 
 
 		formatout "${info[@]}"
 	done
-)
+}
 
 cd "$base"
 mkfifo "$fifo"
-trap "echo -e '\nexiting'; rm '$fifo'" EXIT
+trap "rm '$fifo'" EXIT
 
 while test "$1" != '';
 do
@@ -98,22 +108,23 @@ do
 done
 
 function showcores() \
-(
+{
 	printf "%s" "$(grep 'model name' /proc/cpuinfo | uniq -c \
 		| sed -ne 's/.*\([0-9]\+\).*model name.*: \(.*\)/\1 on \2/g p')"
-)
+}
 
 function showhuge() \
-(
+{
 	printf "%s %s" "$(ls /sys/kernel/mm/hugepages 2>/dev/null)" \
 		"$(cat /sys/kernel/mm/*transparent_hugepage/enabled)"
-)
+}
 
 echo -e "testing with:\n" \
 	"\tup to: $upto jobs\n" \
 	"\tmatrix size: $szmatmul * 512\n" \
 	"\talloc iterations: $italloc * 1024 * 1024\n" \
 	"\texchange iterations: $itexchg * 1024\n" \
+	"\tassumed huge page length: $hplen * 1024\n" \
 	"\taffinity: $(taskset -cp $$)\n" \
 	"\tcores: $(showcores)\n" \
 	"\tsystem: $(uname -ro)\n" \
@@ -121,7 +132,7 @@ echo -e "testing with:\n" \
 	"\tlibc: $(/lib/libc.* | head -n 1)" 
 
 function emitmatmul() \
-(
+{
 	local -A mcmds=( \
 		[naive]='([T]=mnt [T-M]=mntm [P]=mnp [P-FS]=mnpf)' \
 		[tile]='([T]=mtt [T-M]=mttm [P]=mtp [P-FS]=mtpf)' )
@@ -144,7 +155,7 @@ function emitmatmul() \
 		done
 	fi
 	echo "$tcmd"
-)
+}
 
 if test $szmatmul -gt 0
 then
@@ -159,14 +170,14 @@ fi
 
 if test $italloc -gt 0
 then
-	local -i it=$(($italloc * 1024 * 1024))
+	declare -i it=$(($italloc * 1024 * 1024))
 	echo -e "\nallocation. iterations: $it"
 	testone "T at $it" "P ap $it"
 fi
 
 if $itexchg -gt 0
 then
-	local -i it=$(($itexchg * 1024))
+	declare -i it=$(($itexchg * 1024))
 	echo -e "\nexchanges. iterations: $it"
 	testone "T et $it" "P ep $it"
 fi
