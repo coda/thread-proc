@@ -14,7 +14,7 @@ italloc=4	# will be multiplied by 2^20
 itexchg=64	# will be multiplied by 2^10
 hplen=2048	# will be multiplied by 2^10 
 
-fifo="./bench-fifo.$$"
+fifo="/tmp/tp-bench-fifo.$$"
 base="$(dirname $0)"
 
 function formatout() \
