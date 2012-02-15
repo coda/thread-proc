@@ -1,18 +1,12 @@
 #!/bin/sh
 
-set -me
+set -e
 
-declare -i upto
-declare -i szmatmul
-declare -i italloc
-declare -i itexchg
-declare -i hplen
-
-upto=512 
-szmatmul=2	# will be multiplied by 2^9
-italloc=4	# will be multiplied by 2^20
-itexchg=64	# will be multiplied by 2^10
-hplen=2048	# will be multiplied by 2^10 
+declare -i upto=512
+declare -i szmatmul=2	# will be multiplied by 2^9
+declare -i italloc=4	# will be multiplied by 2^20
+declare -i itexchg=64	# will be multiplied by 2^10
+declare -i hplen=2048	# will be multiplied by 2^10
 
 fifo="/tmp/tp-bench-fifo.$$"
 base="$(dirname $0)"
@@ -21,15 +15,15 @@ function formatout() \
 {
 	while test "$1" != ''
 	do
-		printf "% 8s |" "$1"
+		printf "% 10s" "$1"
 		shift
 	done
 	echo
 }
 
-function recalc() \
+function timetosec() \
 { 
-	awk '/^real.*/ { print $2 }' | sed -ne 's/m/*60 + /g; s/s/\n/g p' | bc
+	awk '/^real.*/ {s=$2; sub("m","*60+",s); sub("s","\n",s); print s}' | bc
 }
 
 function runsingle() \
@@ -49,7 +43,7 @@ function runsingle() \
 	( sleep 1s;
 		eval time ./$cmd $nw $args ) 1>/dev/null 2>"$fifo" &
 
-	t=$(cat "$fifo" | recalc)
+	t=$(cat "$fifo" | timetosec)
 	wait $! || t="FAIL"
 	echo $t
 )
@@ -175,7 +169,7 @@ then
 	testone "T at $it" "P ap $it"
 fi
 
-if $itexchg -gt 0
+if test $itexchg -gt 0
 then
 	declare -i it=$(($itexchg * 1024))
 	echo -e "\nexchanges. iterations: $it"
