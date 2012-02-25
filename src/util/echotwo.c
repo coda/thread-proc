@@ -18,7 +18,11 @@ void eprintf(const char *const format, ...)
 void fail(const char *const format, ...)
 {
 	const char *const errstr = strerror(errno);
-	eprintf("%d. err: %s. ", getpid(), errstr);	
+	eprintf("%d. ", getpid());
+	if(errno)
+	{
+		eprintf("err: %s. ", getpid(), errstr);
+	}
 
 	va_list al;
 	va_start(al, format);

@@ -1,9 +1,8 @@
 #include <util/config.h>
 #include <util/echotwo.h>
-
 #include <stdlib.h>
 #include <stdio.h>
-
+#include <string.h>
 #include <unistd.h>
 #include <sched.h>
 
@@ -59,8 +58,7 @@ static unsigned ispowerof2(unsigned x)
 	return (x ^ (x - 1)) + 1 == x << 1;
 }
 
-static void configpagelen(runconfig *const cfg,
-	const int argc, const char *const argv[])
+static void configpagelen(runconfig *const cfg, const unsigned arg)
 {
 	const long sysplen = sysconf(_SC_PAGESIZE);
 	if(sysplen != -1) { } else
@@ -68,47 +66,122 @@ static void configpagelen(runconfig *const cfg,
 		fail("can't get system pagesize");
 	}
 
+	if(sysplen < 0x7fffffff) { } else
+	{
+		fail("system page length %ld is too long", sysplen);
+	}
+
 	unsigned flags = 0;
 	unsigned plen = sysplen;
 
-	if(argc > 3)
+	const long alen = arg * 1024;
+	if(alen < 0x7fffffff) { } else
 	{
-		const int i = atoi(argv[3]);
-		if(i > 0 && ispowerof2(i) && i > sysplen)
-		{
-			plen = i;
-			flags |= cfghugetlb;
-		}
-		else
-		{
-			plen = sysplen;
-		}
+		fail("argument page length %ld is too long", alen);
 	}
 
-	cfg->flags = flags;
+	if(alen > 0 && ispowerof2(alen) && alen > sysplen)
+	{
+		plen = alen;
+		flags |= cfghugetlb;
+	}
+	else
+	{
+		fail("%u don't look like huge page length in KiB", arg);
+	}
+
+	cfg->flags |= flags;
 	cfg->pagelength = plen;
 }
 
-runconfig * formconfig(const int argc, const char *const argv[],
+static const char * shift(const char *const * * pargv)
+{
+	*pargv += 1;
+	return **pargv;
+}
+
+static void usefail()
+{
+	fail("usage: [-n N] [-s N] [-p N] [-a I|G]\n"
+		"\t-n N\tnum of workers\n"
+		"\t-s N\twork size\n"
+		"\t-p N\tpage length\n"
+		"\t-a I|G\taffinity type");
+}
+
+static unsigned readintarg(const char *const * * pargv)
+{
+	unsigned n = 0;
+	const char *const arg = shift(pargv);
+	if(arg && sscanf(arg, "%u", &n) == 1 && n > 0) { } else
+	{
+		usefail();
+	}
+
+	return n;
+}
+
+runconfig * formconfig(
+	const int argc, const char *const * argv,
 	const unsigned defnw, const unsigned defsz)
 {
 	runconfig *const cfg = allocforncores();
 
-	configpagelen(cfg, argc, argv);
+//	configpagelen(cfg, argc, argv);
 
 	cfg->nworkers = defnw;
 	cfg->size = defsz;
+	cfg->flags = 0;
 
-	int i;
+// 	int i;
+// 
+// 	if(argc > 1 && (i = atoi(argv[1])) > 0)
+// 	{
+// 		cfg->nworkers = i;
+// 	}
+// 
+// 	if(argc > 2 && (i = atoi(argv[2])) > 0)
+// 	{
+// 		cfg->size = i;
+// 	}
 
-	if(argc > 1 && (i = atoi(argv[1])) > 0)
+	const char * arg = shift(&argv);
+	while(arg)
 	{
-		cfg->nworkers = i;
-	}
+		if(!strcmp(arg, "-n"))
+		{
+			cfg->nworkers = readintarg(&argv);
+		}
+		else if(!strcmp(arg, "-s"))
+		{
+			cfg->size = readintarg(&argv);
+		}
+		else if(!strcmp(arg, "-p"))
+		{
+			configpagelen(cfg, readintarg(&argv));
+		}
+		else if(!strcmp(arg, "-a"))
+		{
+			arg = shift(&argv);
 
-	if(argc > 2 && (i = atoi(argv[2])) > 0)
-	{
-		cfg->size = i;
+			if(strcmp(arg, "I") == 0)
+			{
+			}
+			else if(strcmp(arg, "G") == 0)
+			{
+				cfg->flags |= cfgaffinegroup;
+			}
+			else
+			{
+				usefail();
+			}
+		}
+		else
+		{
+			usefail();
+		}
+
+		arg = shift(&argv);
 	}
 
 	printf("configured"

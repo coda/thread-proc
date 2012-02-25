@@ -1,7 +1,7 @@
 #ifndef confighincluded
 #define confighincluded
 
-enum { cfghugetlb = 1 };
+enum { cfghugetlb = 1, cfgaffinegroup = 1 << 1 };
 
 typedef struct {
 	unsigned flags;
@@ -12,8 +12,10 @@ typedef struct {
 	unsigned corelist[1];
 } runconfig;
 
-extern runconfig * formconfig(const int argc, const char *const argv[],
-	const unsigned defaultnworkers, const unsigned defaultsize);
+extern runconfig * formconfig(
+	const int argc, const char *const argv[],
+	const unsigned defaultnworkers,
+	const unsigned defaultsize);
 
 extern void freeconfig(runconfig *const rc);
 
