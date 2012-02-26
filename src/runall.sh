@@ -37,7 +37,7 @@ function runsingle() \
 	local cmd="${commands[$i]}"
 	local args="${arguments[$i]}"
 
-#	echo ./$cmd -n $nw $args
+	echo ./$cmd -n $nw $args 1>&2
 	
 	# give some time for plumbing to settle
 	( sleep 1s;

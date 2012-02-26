@@ -40,7 +40,7 @@ static void multroutine(const void *const arg)
 
 	matmul(a, ws->b, al.baserow, al.nrows, m, n, r);
 
-	printf("mult %u with %u rows is done on core %d\n", id, al.nrows,
+	printf("mult %03u with %u rows is done on core %d\n", id, al.nrows,
 		sched_getcpu());
 }
 
@@ -72,7 +72,7 @@ static void randroutine(const void *const arg)
 	matfill(id * 5, bl.absolutebaserow, b, bl.baserow, bl.nrows, n, tr,
 		elrand); 
 
-	printf("rand %u with %u rows is done on core %d\n", id, al.nrows,
+	printf("rand %03u with %u rows is done on core %d\n", id, al.nrows,
 		sched_getcpu());
 }
 
