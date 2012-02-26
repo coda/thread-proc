@@ -80,14 +80,17 @@ static void configpagelen(runconfig *const cfg, const unsigned arg)
 		fail("argument page length %ld is too long", alen);
 	}
 
-	if(alen > 0 && ispowerof2(alen) && alen > sysplen)
+	if(alen > 0)
 	{
-		plen = alen;
-		flags |= cfghugetlb;
-	}
-	else
-	{
-		fail("%u don't look like huge page length in KiB", arg);
+		if(ispowerof2(alen) && alen > sysplen)
+		{
+			plen = alen;
+			flags |= cfghugetlb;
+		}
+		else
+		{
+			fail("%u don't look like huge page length in KiB", arg);
+		}
 	}
 
 	cfg->flags |= flags;
@@ -126,6 +129,8 @@ runconfig * formconfig(
 	const unsigned defnw, const unsigned defsz)
 {
 	runconfig *const cfg = allocforncores();
+
+	configpagelen(cfg, 0);
 
 	cfg->nworkers = defnw;
 	cfg->size = defsz;

@@ -6,7 +6,7 @@ declare -i upto=512
 declare -i szmatmul=2	# will be multiplied by 2^9
 declare -i italloc=4	# will be multiplied by 2^20
 declare -i itexchg=64	# will be multiplied by 2^10
-declare -i hplen=2048	# will be multiplied by 2^10
+declare -i hplen=2048	# will be multiplied by 2^10 by test code
 
 fifo="/tmp/tp-bench-fifo.$$"
 base="$(dirname $0)"
@@ -37,11 +37,11 @@ function runsingle() \
 	local cmd="${commands[$i]}"
 	local args="${arguments[$i]}"
 
-#	echo ./$cmd $nw $args 1>&2
+#	echo ./$cmd -n $nw $args
 	
 	# give some time for plumbing to settle
 	( sleep 1s;
-		eval time ./$cmd $nw $args ) 1>/dev/null 2>"$fifo" &
+		eval time ./$cmd -n $nw $args ) 1>/dev/null 2>"$fifo" &
 
 	t=$(cat "$fifo" | timetosec)
 	wait $! || t="FAIL"
@@ -118,7 +118,7 @@ echo -e "testing with:\n" \
 	"\tmatrix size: $szmatmul * 512\n" \
 	"\talloc iterations: $italloc * 1024 * 1024\n" \
 	"\texchange iterations: $itexchg * 1024\n" \
-	"\tassumed huge page length: $hplen * 1024\n" \
+	"\tassumed huge page length: $hplen"'KiB\n' \
 	"\taffinity: $(taskset -cp $$)\n" \
 	"\tcores: $(showcores)\n" \
 	"\tsystem: $(uname -ro)\n" \
@@ -127,25 +127,27 @@ echo -e "testing with:\n" \
 
 function emitmatmul() \
 {
-	local -A mcmds=( \
-		[naive]='([T]=mnt [T-M]=mntm [P]=mnp [P-FS]=mnpf)' \
-		[tile]='([T]=mtt [T-M]=mttm [P]=mtp [P-FS]=mtpf)' )
+	local -A mcmds
+	mcmds[naive]="([T-I]=mnt [P-I]=mnp "
+	mcmds[naive]+=" [T]='mnt -a G' [P]='mnp -a G' [P-FS]='mnpf -a G')"
+
+	mcmds[tile]="([T-I]=mtt [P-I]=mtp "
+	mcmds[tile]+=" [T]='mtt -a G' [P]='mtp -a G' [P-FS]='mtpf -a G')"
 
 	local -A mcmd=${mcmds[$1]}
 
 	tcmd='testone'
 
-	for i in T T-M P P-FS
+	for i in T-I P-I T P P-FS
 	do
-		tcmd+=" '$i ${mcmd[$i]} $sz'"
+		tcmd+=" '$i ${mcmd[$i]} -s $sz'"
 	done
 
 	if test $hplen -gt 0
 	then
-		hp=$(($hplen << 10))
-		for i in T-M P P-FS
+		for i in P P-FS
 		do
-			tcmd+=" 'HP.$i ${mcmd[$i]} $sz $hp'"
+			tcmd+=" 'HP.$i ${mcmd[$i]} -s $sz -p $hplen'"
 		done
 	fi
 	echo "$tcmd"
@@ -166,12 +168,12 @@ if test $italloc -gt 0
 then
 	declare -i it=$(($italloc * 1024 * 1024))
 	echo -e "\nallocation. iterations: $it"
-	testone "T at $it" "P ap $it"
+	testone "T at -s $it" "P ap -s $it"
 fi
 
 if test $itexchg -gt 0
 then
 	declare -i it=$(($itexchg * 1024))
 	echo -e "\nexchanges. iterations: $it"
-	testone "T et $it" "P ep $it"
+	testone "T et -s $it" "P ep -s $it"
 fi
