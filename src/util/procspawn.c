@@ -1,5 +1,6 @@
 #include <./util/spawn.h>
 #include <./util/echotwo.h>
+#include <./util/tools.h>
 
 #include <stdlib.h>
 #include <stdio.h>
@@ -59,12 +60,24 @@ static void setaffinity(const pid_t p, const runconfig *const rc,
 	unsigned char coresetbytes[CPU_ALLOC_SIZE(rc->ncores)];
 	cpu_set_t *const coreset = (cpu_set_t *)coresetbytes;
 	CPU_ZERO_S(sizeof(coresetbytes), coreset);
-	CPU_SET_S(rc->corelist[id % rc->ncores], sizeof(coresetbytes), coreset);
+
+	unsigned core;
+
+	if(rc->flags & cfgaffinegroup)
+	{
+		core = groupofid(rc->nworkers, rc->ncores, id);
+	}
+	else
+	{
+		core = id % rc->ncores;
+	}
+
+	CPU_SET_S(rc->corelist[core], sizeof(coresetbytes), coreset);
 
 	if(sched_setaffinity(p, sizeof(coreset), coreset) == 0) { } else
 	{
 		fail("can't set affinity to %u core for proc %d",
-			rc->corelist[id % rc->ncores], p);
+			rc->corelist[core], p);
 	}
 }
 

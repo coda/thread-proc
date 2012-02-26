@@ -14,4 +14,7 @@ enum
 extern unsigned align(const unsigned n, const unsigned blocklen);
 extern unsigned aligndown(const unsigned n, const unsigned blocklen);
 
+extern unsigned groupofid(
+	const unsigned nitems, const unsigned ngroups, const unsigned id);
+
 #endif

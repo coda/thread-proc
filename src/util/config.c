@@ -127,23 +127,9 @@ runconfig * formconfig(
 {
 	runconfig *const cfg = allocforncores();
 
-//	configpagelen(cfg, argc, argv);
-
 	cfg->nworkers = defnw;
 	cfg->size = defsz;
 	cfg->flags = 0;
-
-// 	int i;
-// 
-// 	if(argc > 1 && (i = atoi(argv[1])) > 0)
-// 	{
-// 		cfg->nworkers = i;
-// 	}
-// 
-// 	if(argc > 2 && (i = atoi(argv[2])) > 0)
-// 	{
-// 		cfg->size = i;
-// 	}
 
 	const char * arg = shift(&argv);
 	while(arg)
@@ -200,6 +186,8 @@ runconfig * formconfig(
 	}
 
 	printf("\n");
+
+	fflush(stdout);
 
 	return cfg;
 }
