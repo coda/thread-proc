@@ -94,7 +94,7 @@ do
 	'-m') shift; szmatmul="$1";;
 	'-a') shift; italloc="$1";;
 	'-e') shift; itexchg="$1";;
-	'-hp') shift; hplen="$1";;
+	'-p') shift; hplen="$1";;
 
 	esac
 
