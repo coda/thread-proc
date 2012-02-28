@@ -103,14 +103,12 @@ static const char * shift(const char *const * * pargv)
 	return **pargv;
 }
 
-static void usefail()
-{
-	fail("usage: [-n N] [-s N] [-p N] [-a I|G]\n"
+static const char *const usage =
+	"usage: [-n N] [-s N] [-p N] [-a I|G]\n"
 		"\t-n N\tnum of workers\n"
 		"\t-s N\twork size\n"
 		"\t-p N\tpage length\n"
-		"\t-a I|G\taffinity type");
-}
+		"\t-a I|G\taffinity type";
 
 static unsigned readintarg(const char *const * * pargv)
 {
@@ -118,7 +116,7 @@ static unsigned readintarg(const char *const * * pargv)
 	const char *const arg = shift(pargv);
 	if(arg && sscanf(arg, "%u", &n) == 1 && n > 0) { } else
 	{
-		usefail();
+		fail("can't parse '%s' as int. %s", arg, usage);
 	}
 
 	return n;
@@ -136,40 +134,84 @@ runconfig * formconfig(
 	cfg->size = defsz;
 	cfg->flags = 0;
 
+	struct
+	{
+		unsigned nset:1;
+		unsigned sset:1;
+		unsigned pset:1;
+		unsigned aset:1;
+	} flags = { 0, 0, 0, 0 };
+
 	const char * arg = shift(&argv);
 	while(arg)
 	{
 		if(!strcmp(arg, "-n"))
 		{
-			cfg->nworkers = readintarg(&argv);
-		}
-		else if(!strcmp(arg, "-s"))
-		{
-			cfg->size = readintarg(&argv);
-		}
-		else if(!strcmp(arg, "-p"))
-		{
-			configpagelen(cfg, readintarg(&argv));
-		}
-		else if(!strcmp(arg, "-a"))
-		{
-			arg = shift(&argv);
-
-			if(strcmp(arg, "I") == 0)
+			if(!flags.nset)
 			{
-			}
-			else if(strcmp(arg, "G") == 0)
-			{
-				cfg->flags |= cfgaffinegroup;
+				cfg->nworkers = readintarg(&argv);
+				flags.nset = 1;
 			}
 			else
 			{
-				usefail();
+				fail("-n already specified. %s", usage);
+			}
+		}
+		else if(!strcmp(arg, "-s"))
+		{
+			if(!flags.sset)
+			{
+				cfg->size = readintarg(&argv);
+				flags.sset = 1;
+			}
+			else
+			{
+				fail("-s already specified. %s", usage);
+			}
+		}
+		else if(!strcmp(arg, "-p"))
+		{
+			if(!flags.pset)
+			{
+				configpagelen(cfg, readintarg(&argv));
+				flags.pset = 1;
+			}
+			else
+			{
+				fail("-p already specified. %s", usage);
+			}
+		}
+		else if(!strcmp(arg, "-a"))
+		{
+			if(flags.aset)
+			{
+				fail("-a already specified. %s", usage);
+			}
+			else
+			{
+				flags.aset = 1;
+
+				arg = shift(&argv);
+
+				if(strcmp(arg, "I") == 0)
+				{
+					cfg->flags |= cfgaffinity;
+				}
+				else if(strcmp(arg, "G") == 0)
+				{
+					cfg->flags |= cfgaffinity;
+					cfg->flags |= cfgaffinegroup;
+				}
+				else
+				{
+					fail("unknown affinity grouping '%s'. "
+						"%s", arg, usage);
+				}
 			}
 		}
 		else
 		{
-			usefail();
+			fail(usage, "unknown option");
 		}
 
 		arg = shift(&argv);

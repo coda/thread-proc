@@ -1,7 +1,7 @@
 #ifndef confighincluded
 #define confighincluded
 
-enum { cfghugetlb = 1, cfgaffinegroup = 1 << 1 };
+enum { cfghugetlb = 1, cfgaffinity = 1 << 1, cfgaffinegroup = 1 << 2 };
 
 typedef struct {
 	unsigned flags;

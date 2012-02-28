@@ -18,6 +18,11 @@ static void joinsuccess(const pthread_t t)
 static void setaffinity(const pthread_t t, const runconfig *const rc,
 	const unsigned id)
 {
+	if(rc->flags & cfgaffinity) { } else
+	{
+		return;
+	}
+
 	unsigned char coresetbytes[CPU_ALLOC_SIZE(rc->ncores)];
 	cpu_set_t *const coreset = (cpu_set_t *)coresetbytes;
 	CPU_ZERO_S(sizeof(coresetbytes), coreset);
