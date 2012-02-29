@@ -8,6 +8,8 @@ declare -i italloc=4	# will be multiplied by 2^20
 declare -i itexchg=64	# will be multiplied by 2^10
 declare -i hplen=2048	# will be multiplied by 2^10 by test code
 
+declare -A affiname=(['-a G']='Group' ['-a I']='Interleave' [' ']='None')
+
 declare log='/dev/null'
 
 fifo="/tmp/tp-bench-fifo.$$"
@@ -83,6 +85,7 @@ do
 	'-e') shift; itexchg="$1";;
 	'-p') shift; hplen="$1";;
 	'-l') shift; log="$(readlink -f "$1")";;
+	'-s') affiname=(['-a I']='Interleave');;
 
 	esac
 
@@ -143,7 +146,6 @@ function emitmatmul() \
 	echo "$tcmd"
 }
 
-declare -A affiname=(['-a G']='Group' ['-a I']='Interleave' [' ']='None')
 for aff in "${!affiname[@]}"
 do
 	echo -e "\ntest round with affinity: ${affiname[$aff]}"
