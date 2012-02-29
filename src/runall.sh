@@ -128,14 +128,14 @@ function emitmatmul() \
 
 	tcmd='testone'
 
-	for i in T T-M P P-FS
+	for i in T T-M P
 	do
 		tcmd+=" '$i ${mcmd[$i]} $affarg -s $sz'"
 	done
 
 	if test $hplen -gt 0
 	then
-		for i in T-M P P-FS
+		for i in T-M P
 		do
 			tcmd+=" 'HP.$i ${mcmd[$i]} $affarg -s $sz -p $hplen'"
 		done
@@ -143,27 +143,33 @@ function emitmatmul() \
 	echo "$tcmd"
 }
 
-if test $szmatmul -gt 0
-then
-	sz=$((szmatmul * 512))
+declare -A affiname=(['-a G']='Group' ['-a I']='Interleave' [' ']='None')
+for aff in "${!affiname[@]}"
+do
+	echo -e "\ntest round with affinity: ${affiname[$aff]}"
 
-	echo -e "\nrow-stored matrix multiplication. size: $sz; affinity: G"
-	eval $(emitmatmul naive '-a G')
+	if test $szmatmul -gt 0
+	then
+		sz=$((szmatmul * 512))
 
-	echo -e "\ntile-stored matrix multiplication. size: $sz; affinity: G"
-	eval $(emitmatmul tile '-a I')
-fi
+		echo -e "\nrow-stored matrix multiplication. size: $sz"
+		eval $(emitmatmul naive "$aff")
 
-if test $italloc -gt 0
-then
-	declare -i it=$(($italloc * 1024 * 1024))
-	echo -e "\nallocation. iterations: $it"
-	testone "T at -s $it" "P ap -s $it"
-fi
+		echo -e "\ntile-stored matrix multiplication. size: $sz;"
+		eval $(emitmatmul tile "$aff")
+	fi
 
-if test $itexchg -gt 0
-then
-	declare -i it=$(($itexchg * 1024))
-	echo -e "\nexchanges. iterations: $it"
-	testone "T et -s $it" "P ep -s $it"
-fi
+	if test $italloc -gt 0
+	then
+		declare -i it=$(($italloc * 1024 * 1024))
+		echo -e "\nallocation. iterations: $it"
+		testone "T at $aff -s $it" "P ap $aff -s $it"
+	fi
+
+	if test $itexchg -gt 0
+	then
+		declare -i it=$(($itexchg * 1024))
+		echo -e "\nexchanges. iterations: $it"
+		testone "T et $aff -s $it" "P ep $aff -s $it"
+	fi
+done

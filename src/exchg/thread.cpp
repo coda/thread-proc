@@ -199,7 +199,7 @@ static void process(const runconfig *const rc)
 		}
 		else
 		{
-			printf("\tEMPTY\n");
+			printf("EMPTY\n");
 		}
 	}
 	
