@@ -131,14 +131,14 @@ function emitmatmul() \
 
 	tcmd='testone'
 
-	for i in T T-M P
+	for i in T T-M P P-FS
 	do
 		tcmd+=" '$i ${mcmd[$i]} $affarg -s $sz'"
 	done
 
 	if test $hplen -gt 0
 	then
-		for i in T-M P
+		for i in T-M P P-FS
 		do
 			tcmd+=" 'HP.$i ${mcmd[$i]} $affarg -s $sz -p $hplen'"
 		done
