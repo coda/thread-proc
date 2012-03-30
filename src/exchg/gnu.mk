@@ -1,4 +1,4 @@
-ebld = $(bld)/exchg
+ebld := $(call bitspath)
 
 esrc = heapsum.c vector.c ringlink.c nixwrapper.c \
 	ringtest-proc.c ringtest-thread.c \
@@ -13,14 +13,14 @@ epcommon = $(ecommon) $(ebld)/vector.o
 exchg: $(ebin)
 
 $(bld)/bin/et: lflags += -lstdc++ -pthread
-$(bld)/bin/et: $(ebld)/thread.o $(ecommon) $(ubld)/threadspawn.o
+$(bld)/bin/et: $(ebld)/thread.o $(ecommon) $(uthrdspawn)
 
 $(bld)/bin/ep: lflags += -lrt
-$(bld)/bin/ep: $(ebld)/proc.o $(epcommon) $(ubld)/procspawn.o $(umemcommon)
+$(bld)/bin/ep: $(ebld)/proc.o $(epcommon) $(uprocspawn) $(umemcommon)
 
 $(bld)/bin/rtt: lflags += -pthread
-$(bld)/bin/rtt: $(ebld)/ringtest-thread.o $(ecommon) $(ubld)/threadspawn.o
+$(bld)/bin/rtt: $(ebld)/ringtest-thread.o $(ecommon) $(uthrdspawn)
 
-$(bld)/bin/rtp: $(ebld)/ringtest-proc.o $(ecommon) $(ubld)/procspawn.o
+$(bld)/bin/rtp: $(ebld)/ringtest-proc.o $(ecommon) $(uprocspawn)
 
 include $(call o2d,$(eobj))

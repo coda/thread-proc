@@ -13,9 +13,9 @@ test -d foreign || mkdir foreign
 
 cd foreign
 
-if test -d mkenv
-then
-	(cd mkenv; git pull)
-else
-	git clone "$prefix/mkenv"
-fi
+function update() {
+	{ test -d "$1" && ( cd "$1"; git pull ); } || git clone "$prefix/$1"
+}
+
+update mkenv
+update echo-2

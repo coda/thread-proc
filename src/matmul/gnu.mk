@@ -1,11 +1,11 @@
-mbld = $(call bldpath)
+mbld := $(call bitspath)
 msrc = naivemul.c tilemul.c element.c muljob.c thread.c proc.c proconfs.c
 mobj = $(call c2o,$(mbld),$(msrc))
 mbin = $(addprefix $(bld)/bin/,mnt mtt mntm mttm mnp mtp mnpf mtpf)
 
-mtcommon = $(ucommon) $(ubld)/threadspawn.o
+mtcommon = $(ucommon) $(uthrdspawn)
 mtmcommon = $(mtcommon) $(ubld)/memmap.o
-mpcommon = $(ucommon) $(ubld)/procspawn.o $(ubld)/memmap.o
+mpcommon = $(ucommon) $(uprocspawn) $(ubld)/memmap.o
 mpfcommon = $(mpcommon) $(ubld)/memfile.o
 
 # naive = $(call c2o, $(mbld),util.c naivemul.c)
