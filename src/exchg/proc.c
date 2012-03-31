@@ -3,11 +3,12 @@
 #include <exchg/ringlink.h>
 #include <exchg/wrapper.h>
 #include <util/spawn.h>
-#include <util/echotwo.h>
 #include <util/config.h>
 #include <util/tools.h>
 #include <util/memmap.h>
 #include <util/memfile.h>
+#include <echotwo.h>
+
 #include <unistd.h>
 #include <sched.h>
 #include <sys/mman.h>

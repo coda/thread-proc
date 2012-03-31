@@ -1,5 +1,6 @@
 #include <exchg/wrapper.h>
-#include <util/echotwo.h>
+
+#include <echotwo.h>
 
 #include <unistd.h>
 #include <signal.h>

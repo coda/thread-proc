@@ -1,10 +1,10 @@
 #include <./util/spawn.h>
-#include <./util/echotwo.h>
 #include <./util/tools.h>
+
+#include <echotwo.h>
 
 #include <stdlib.h>
 #include <stdio.h>
-
 #include <pthread.h>
 
 static void joinsuccess(const pthread_t t)

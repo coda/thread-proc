@@ -2,7 +2,8 @@
 #include <matmul/muljob.h>
 #include <util/config.h>
 #include <util/spawn.h>
-#include <util/echotwo.h>
+
+#include <echotwo.h>
 
 #include <stdlib.h>
 #include <stdio.h>

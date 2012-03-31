@@ -1,8 +1,10 @@
 #include <exchg/ringlink.h>
 #include <exchg/wrapper.h>
 #include <util/spawn.h>
-#include <util/echotwo.h>
 #include <util/config.h>
+
+#include <echotwo.h>
+
 #include <unistd.h>
 #include <stdlib.h>
 #include <stdio.h>

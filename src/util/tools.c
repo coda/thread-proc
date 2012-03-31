@@ -1,5 +1,6 @@
 #include <./util/tools.h>
-#include <./util/echotwo.h>
+
+#include <echotwo.h>
 
 unsigned align(const unsigned n, const unsigned blklen)
 {

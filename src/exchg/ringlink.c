@@ -1,5 +1,7 @@
 #include <exchg/ringlink.h>
-#include <util/echotwo.h>
+
+#include <echotwo.h>
+
 #include <unistd.h>
 #include <errno.h>
 

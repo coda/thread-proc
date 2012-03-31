@@ -3,9 +3,11 @@ extern "C" {
 #include <exchg/ringlink.h>
 #include <exchg/wrapper.h>
 #include <util/spawn.h>
-#include <util/echotwo.h>
 #include <util/config.h>
 #include <util/tools.h>
+
+#include <echotwo.h>
+
 #include <unistd.h>
 #include <sched.h>
 #include <stdlib.h>

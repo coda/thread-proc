@@ -1,6 +1,8 @@
 #include <exchg/vector.h>
 #include <exchg/wrapper.h>
-#include <util/echotwo.h>
+
+#include <echotwo.h>
+
 #include <unistd.h>
 #include <sys/mman.h>
 

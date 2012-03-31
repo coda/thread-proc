@@ -1,6 +1,7 @@
 #include <util/memmap.h>
 #include <util/tools.h>
-#include <util/echotwo.h>
+
+#include <echotwo.h>
 
 #include <stdlib.h>
 

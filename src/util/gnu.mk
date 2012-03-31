@@ -18,8 +18,7 @@ $(B)/procspawntest: $(ubits)/spawntest.o $(L)/libusp.a $(L)/libucm.a
 $(B)/threadspawntest: lflags += -pthread
 $(B)/threadspawntest: $(ubits)/spawntest.o $(L)/libust.a $(L)/libucm.a
 
-$(L)/libucm.a: \
-	$(call c2o,$(ubits),config.c echotwo.c tools.c memmap.c memfile.c)
+$(L)/libucm.a: $(call c2o,$(ubits),config.c tools.c memmap.c memfile.c)
 
 $(L)/libust.a: $(ubits)/threadspawn.o
 $(L)/libusp.a: $(ubits)/procspawn.o

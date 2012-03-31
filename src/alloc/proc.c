@@ -1,6 +1,7 @@
 #include <./alloc/worker.h>
 #include <./util/spawn.h>
-#include <./util/echotwo.h>
+
+#include <echotwo.h>
 
 #include <string.h>
 #include <stdio.h>

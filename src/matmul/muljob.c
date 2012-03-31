@@ -1,7 +1,8 @@
 #include <matmul/muljob.h>
 #include <matmul/mul.h>
 #include <util/tools.h>
-#include <util/echotwo.h>
+
+#include <echotwo.h>
 
 typedef struct
 {

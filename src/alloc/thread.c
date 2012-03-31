@@ -1,10 +1,10 @@
 #include <./alloc/worker.h>
 #include <./util/spawn.h>
-#include <./util/echotwo.h>
+
+#include <echotwo.h>
 
 #include <string.h>
 #include <stdio.h>
-
 #include <sched.h>
 
 static void routine(const void *const arg)

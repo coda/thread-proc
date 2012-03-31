@@ -1,5 +1,6 @@
 #include <matmul/mul.h>
-#include <util/echotwo.h>
+
+#include <echotwo.h>
 
 #include <stdlib.h>
 #include <stdio.h>

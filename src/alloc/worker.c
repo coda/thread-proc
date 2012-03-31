@@ -1,5 +1,6 @@
 #include <./alloc/worker.h>
-#include <./util/echotwo.h>
+
+#include <echotwo.h>
 
 #include <stdlib.h>
 #include <stdio.h>
