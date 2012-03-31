@@ -56,4 +56,4 @@ then
 fi
 
 ( cd "$base/src" && make -j $makejobs -f gnu.mk \
-	bld="$bld" foreign="$fgn" toolchain="$tcn" debug="$dbg" )
+	bld="$bld" foreign="$fgn" toolchain="$tcn" debug="$dbg" e2="$bld/F")

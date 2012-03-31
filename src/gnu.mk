@@ -2,6 +2,7 @@ include $(foreign)/mkenv/gnu/common.mk
 
 ifndef e2
 e2 = $(bld)/F
+$(warning e2 undefined; assuming $(e2))
 endif
 
 cflags += -D_POSIX_C_SOURCE=200809 -D_GNU_SOURCE -I $(e2)/include
