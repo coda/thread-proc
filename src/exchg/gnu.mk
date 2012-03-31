@@ -1,26 +1,29 @@
-ebld := $(call bitspath)
+ebits := $(call bitspath)
 
 esrc = heapsum.c vector.c ringlink.c nixwrapper.c \
 	ringtest-proc.c ringtest-thread.c \
 	proc.c 
 
-eobj = $(call cpp2o,$(ebld),thread.cpp) $(call c2o,$(ebld),$(esrc))
-ebin = $(addprefix $(bld)/bin/,rtt rtp et ep)
+eobj = $(call cpp2o,$(ebits),thread.cpp) $(call c2o,$(ebits),$(esrc))
+ebin = $(addprefix $(B)/,rtt rtp et ep)
+elib = $(addprefix $(L)/,libxch.a)
 
-ecommon = $(call c2o,$(ebld),heapsum.c ringlink.c nixwrapper.c) $(ucommon)
-epcommon = $(ecommon) $(ebld)/vector.o
+ecommon =  $(elib) $(L)/libucm.a
+epcommon = $(ecommon) $(ebits)/vector.o
 
-exchg: $(ebin)
+exchg: $(ebin) $(elib)
 
-$(bld)/bin/et: lflags += -lstdc++ -pthread
-$(bld)/bin/et: $(ebld)/thread.o $(ecommon) $(uthrdspawn)
+$(L)/libxch.a: $(call c2o,$(ebits),heapsum.c ringlink.c nixwrapper.c)
 
-$(bld)/bin/ep: lflags += -lrt
-$(bld)/bin/ep: $(ebld)/proc.o $(epcommon) $(uprocspawn) $(umemcommon)
+$(B)/et: lflags += -lstdc++ -pthread
+$(B)/et: $(ebits)/thread.o $(L)/libust.a $(ecommon)
 
-$(bld)/bin/rtt: lflags += -pthread
-$(bld)/bin/rtt: $(ebld)/ringtest-thread.o $(ecommon) $(uthrdspawn)
+$(B)/ep: lflags += -lrt
+$(B)/ep: $(ebits)/proc.o $(L)/libusp.a $(epcommon)
 
-$(bld)/bin/rtp: $(ebld)/ringtest-proc.o $(ecommon) $(uprocspawn)
+$(B)/rtt: lflags += -pthread
+$(B)/rtt: $(ebits)/ringtest-thread.o $(L)/libust.a $(ecommon)
+
+$(B)/rtp: $(ebits)/ringtest-proc.o $(L)/libusp.a $(ecommon)
 
 include $(call o2d,$(eobj))

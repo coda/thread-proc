@@ -1,37 +1,36 @@
-mbld := $(call bitspath)
+mbits := $(call bitspath)
+
 msrc = naivemul.c tilemul.c element.c muljob.c thread.c proc.c proconfs.c
-mobj = $(call c2o,$(mbld),$(msrc))
-mbin = $(addprefix $(bld)/bin/,mnt mtt mntm mttm mnp mtp mnpf mtpf)
+mobj = $(call c2o,$(mbits),$(msrc))
+mbin = $(addprefix $(B)/,mnt mtt mntm mttm mnp mtp mnpf mtpf)
+mlib = $(addprefix $(L)/,libmx.a)
 
-mtcommon = $(ucommon) $(uthrdspawn)
-mtmcommon = $(mtcommon) $(ubld)/memmap.o
-mpcommon = $(ucommon) $(uprocspawn) $(ubld)/memmap.o
-mpfcommon = $(mpcommon) $(ubld)/memfile.o
+mtcommon = $(L)/libust.a $(L)/libucm.a
+mpcommon = $(L)/libusp.a $(L)/libucm.a
 
-# naive = $(call c2o, $(mbld),util.c naivemul.c)
-# tile = $(call c2o, $(mbld),util.c tilemul.c)
+matmul: $(mbin) $(mlib)
 
-naive = $(call c2o,$(mbld),naivemul.c element.c muljob.c)
-tile = $(call c2o,$(mbld),tilemul.c element.c muljob.c)
+$(L)/libmx.a: $(call c2o,$(mbits),element.c muljob.c)
 
-matmul: $(mbin)
+naive = $(L)/libmx.a $(mbits)/naivemul.o
+tile = $(L)/libmx.a $(mbits)/tilemul.o
 
-$(bld)/bin/mnt \
-$(bld)/bin/mtt: lflags += -pthread
-$(bld)/bin/mnt: $(mbld)/thread.o $(naive) $(mtcommon)
-$(bld)/bin/mtt: $(mbld)/thread.o $(tile) $(mtcommon)
+$(B)/mnt \
+$(B)/mtt: lflags += -pthread
+$(B)/mnt: $(mbits)/thread.o $(naive) $(mtcommon)
+$(B)/mtt: $(mbits)/thread.o $(tile) $(mtcommon)
 
-$(bld)/bin/mntm	\
-$(bld)/bin/mttm: lflags += -pthread
-$(bld)/bin/mntm: $(mbld)/threadonmap.o $(naive) $(mtmcommon)
-$(bld)/bin/mttm: $(mbld)/threadonmap.o $(tile) $(mtmcommon)
+$(B)/mntm \
+$(B)/mttm: lflags += -pthread
+$(B)/mntm: $(mbits)/threadonmap.o $(naive) $(mtcommon)
+$(B)/mttm: $(mbits)/threadonmap.o $(tile) $(mtcommon)
  
-$(bld)/bin/mnp: $(mbld)/proc.o $(naive) $(mpcommon)
-$(bld)/bin/mtp: $(mbld)/proc.o $(tile) $(mpcommon)
+$(B)/mnp: $(mbits)/proc.o $(naive) $(mpcommon)
+$(B)/mtp: $(mbits)/proc.o $(tile) $(mpcommon)
  
-$(bld)/bin/mnpf \
-$(bld)/bin/mtpf: lflags += -lrt
-$(bld)/bin/mnpf: $(mbld)/proconfs.o $(naive) $(mpfcommon)
-$(bld)/bin/mtpf: $(mbld)/proconfs.o $(tile) $(mpfcommon)
+$(B)/mnpf \
+$(B)/mtpf: lflags += -lrt
+$(B)/mnpf: $(mbits)/proconfs.o $(naive) $(mpcommon)
+$(B)/mtpf: $(mbits)/proconfs.o $(tile) $(mpcommon)
 
 include $(call o2d,$(mobj))

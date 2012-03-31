@@ -1,23 +1,26 @@
-ubld := $(call bitspath)
+ubits := $(call bitspath)
 
 usrc = config.c echotwo.c tools.c memfile.c memmap.c \
 	procspawn.c threadspawn.c \
 	cfgtest.c spawntest.c
 
-uobj = $(call c2o,$(ubld),$(usrc))
-ubin = $(bld)/bin/cfgtest $(bld)/bin/procspawntest $(bld)/bin/threadspawntest
-ucommon = $(call c2o,$(ubld),config.c echotwo.c tools.c)
-umemcommon = $(ucommon) $(call c2o,$(ubld),memmap.c memfile.c)
-uthrdspawn=$(addprefix $(ubld),threadspawn.o)
-uprocspawn=$(addprefix $(ubld),procspawn.o)
+uobj = $(call c2o,$(ubits),$(usrc))
+ubin = $(addprefix $(B)/,cfgtest procspawntest threadspawntest)
+ulib = $(addprefix $(L)/,libucm.a libust.a libusp.a)
 
-util: $(ubin)
+util: $(ubin) $(ulib)
 
-$(bld)/bin/cfgtest: $(ubld)/cfgtest.o $(ucommon)
+$(B)/cfgtest: $(ubits)/cfgtest.o $(L)/libucm.a
 
-$(bld)/bin/procspawntest: $(ubld)/spawntest.o $(uprocspawn) $(ucommon)
+$(B)/procspawntest: $(ubits)/spawntest.o $(L)/libusp.a $(L)/libucm.a 
 
-$(bld)/bin/threadspawntest: lflags += -pthread
-$(bld)/bin/threadspawntest: $(ubld)/spawntest.o $(uthrdspawn) $(ucommon)
+$(B)/threadspawntest: lflags += -pthread
+$(B)/threadspawntest: $(ubits)/spawntest.o $(L)/libust.a $(L)/libucm.a
+
+$(L)/libucm.a: \
+	$(call c2o,$(ubits),config.c echotwo.c tools.c memmap.c memfile.c)
+
+$(L)/libust.a: $(ubits)/threadspawn.o
+$(L)/libusp.a: $(ubits)/procspawn.o
 
 include $(call o2d, $(uobj))
