@@ -1,6 +1,11 @@
 include $(foreign)/mkenv/gnu/common.mk
 
-cflags += -D_POSIX_C_SOURCE=200809 -D_GNU_SOURCE
+ifndef e2
+e2 = $(bld)/F
+endif
+
+cflags += -D_POSIX_C_SOURCE=200809 -D_GNU_SOURCE -I $(e2)/include
+lflags += -L $(e2)/lib -le2
 
 all: $(bld)/bin/runall util alloc exchg matmul
 

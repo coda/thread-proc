@@ -7,12 +7,14 @@ foreign="$base/foreign"
 toolchain=gcc
 debug=N
 makejobs=5
+buildmodules=Y
 
 while test "$1" != ''
 do
 	case "$1" in
 	
 	'-d') debug=Y;;
+	'-n') buildmodules=N;;
 	'-b') shift; bld="$1";;
 	'-t') shift; toolchain="$1";;
 	'-j') shift; test "$1" -gt 0 && makejobs="$1";;
@@ -39,7 +41,7 @@ dbg="$debug"
 foreignmake () {
 	echo building "$@"
 	froot="$fgn/$1"
-	fbld="$bld/F/$2"
+	fbld="$(dirname "$bld/F/$2")"
 	shift 2
 	test -d "$froot" || { echo "no foreign module: $froot"; false; }
 	mkdir -p "$fbld"
@@ -48,8 +50,10 @@ foreignmake () {
 	echo
 }
 
-foreignmake echo-2 '.'
+if test "$buildmodules" = Y
+then
+	foreignmake echo-2 '.'
+fi
 
-echo building main
 ( cd "$base/src" && make -j $makejobs -f gnu.mk \
 	bld="$bld" foreign="$fgn" toolchain="$tcn" debug="$dbg" )

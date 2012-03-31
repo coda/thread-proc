@@ -1,6 +1,7 @@
 ubits := $(call bitspath)
 
-usrc = config.c echotwo.c tools.c memfile.c memmap.c \
+usrc = \
+	config.c tools.c memfile.c memmap.c \
 	procspawn.c threadspawn.c \
 	cfgtest.c spawntest.c
 
