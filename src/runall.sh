@@ -8,7 +8,8 @@ declare -i italloc=4	# will be multiplied by 2^20
 declare -i itexchg=64	# will be multiplied by 2^10
 declare -i hplen=2048	# will be multiplied by 2^10 by test code
 
-declare -A affiname=(['-a G']='Group' ['-a I']='Interleave' [' ']='None')
+# declare -A affiname=(['-a G']='Group' ['-a I']='Interleave' [' ']='None')
+declare -A affiname=(['-a I']='Interleave')
 
 declare log='/dev/null'
 
@@ -99,7 +100,7 @@ trap "rm '$fifo'" EXIT
 function showcores() \
 {
 	printf "%s" "$(grep 'model name' /proc/cpuinfo | uniq -c \
-		| sed -ne 's/.*\([0-9]\+\).*model name.*: \(.*\)/\1 on \2/g p')"
+		| sed -ne 's/[^0-9]*\([0-9]\+\).*model name.*: \(.*\)/\1 on \2/g p')"
 }
 
 function showhuge() \
@@ -131,15 +132,15 @@ function emitmatmul() \
 
 	tcmd='testone'
 
-	for i in T T-M P P-FS
-	do
+#	for i in T T-M P P-FS
+	for i in T P T-M; do
 		tcmd+=" '$i ${mcmd[$i]} $affarg -s $sz'"
 	done
 
 	if test $hplen -gt 0
 	then
-		for i in T-M P P-FS
-		do
+#		for i in T-M P P-FS
+		for i in P T-M; do
 			tcmd+=" 'HP.$i ${mcmd[$i]} $affarg -s $sz -p $hplen'"
 		done
 	fi
