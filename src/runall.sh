@@ -43,7 +43,7 @@ function runsingle() \
 	( echo -e "./$cmd -n $nw"; sleep 1s;
 		eval time "./$cmd" -n $nw; echo ) >> "$log" 2>"$fifo" &
 
-	t=$(cat "$fifo" | timetosec)
+	t=$(cat "$fifo" | tee -a /dev/stderr | timetosec)
 	wait $! || t="FAIL"
 	echo $t
 )
@@ -108,6 +108,11 @@ function showhuge() \
 	printf "%s %s" "$(ls /sys/kernel/mm/hugepages 2>/dev/null)" \
 		"$(cat /sys/kernel/mm/*transparent_hugepage/enabled)"
 }
+
+echo -n 'checking tools: '
+bc 2>/dev/null <<<'' || { echo "bc isn't operational"; false; }
+wk 2>/dev/null ''<<<'' || { echo "awk isn't operational"; false; }
+echo 'OK'
 
 echo -e "testing with:\n" \
 	"\tup to: $upto jobs\n" \
