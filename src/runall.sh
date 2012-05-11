@@ -111,7 +111,7 @@ function showhuge() \
 
 echo -n 'checking tools: '
 bc 2>/dev/null <<<'' || { echo "bc isn't operational"; false; }
-wk 2>/dev/null ''<<<'' || { echo "awk isn't operational"; false; }
+awk 2>/dev/null ''<<<'' || { echo "awk isn't operational"; false; }
 echo 'OK'
 
 echo -e "testing with:\n" \
