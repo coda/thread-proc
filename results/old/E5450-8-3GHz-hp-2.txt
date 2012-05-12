@@ -1,0 +1,67 @@
+call_batch: calling batch
+/tmp/proclist.tATiQM:
+umt208 0 /home/u1315/thread-proc/bld/bin/./runall
+====
+testing with:
+ 	up to: 512 jobs
+ 	matrix size: 4 * 512
+ 	alloc iterations: 16 * 1024 * 1024
+ 	exchange iterations: 128 * 1024
+ 	assumed huge page length: 2048 * 1024
+ 	affinity: pid 12562's current affinity list: 0-7
+ 	cores: 8 on Intel(R) Xeon(R) CPU           E5450  @ 3.00GHz
+ 	system: 2.6.32-220.el6.x86_64 GNU/Linux
+ 	huge pages: hugepages-2048kB [always] never
+ 	libc: GNU C Library stable release version 2.12, by Roland McGrath et al.
+
+row-stored matrix multiplication. size: 2048
+         N         T       T-M         P      P-FS    HP.T-M      HP.P   HP.P-FS
+         1   528.259   457.608   450.934   458.051      FAIL      FAIL      FAIL
+         2   281.959   296.823   278.188   268.047      FAIL      FAIL      FAIL
+         4   154.957   123.672   117.479   150.148      FAIL      FAIL      FAIL
+         8    88.507    64.802    64.818    63.423      FAIL      FAIL      FAIL
+        16    93.323    78.374    82.412    77.860      FAIL      FAIL      FAIL
+        32    92.745    79.460    81.087    82.090      FAIL      FAIL      FAIL
+        64    92.987    77.585    81.638    79.092      FAIL      FAIL      FAIL
+       128    90.728    78.224    80.235    79.832      FAIL      FAIL      FAIL
+       256    91.944    74.735    79.355    78.722      FAIL      FAIL      FAIL
+       512    92.739    74.296    79.508    78.289      FAIL      FAIL      FAIL
+
+tile-stored matrix multiplication. size: 2048
+         N         T       T-M         P      P-FS    HP.T-M      HP.P   HP.P-FS
+         1   225.222    51.167    51.226    51.222      FAIL      FAIL      FAIL
+         2   132.517    26.354    26.576    26.349      FAIL      FAIL      FAIL
+         4   117.786    17.422    15.712    15.594      FAIL      FAIL      FAIL
+         8    62.067     8.097     8.602     8.998      FAIL      FAIL      FAIL
+        16    82.894     9.947    10.374    10.313      FAIL      FAIL      FAIL
+        32    83.673    11.139    11.030    11.173      FAIL      FAIL      FAIL
+        64    84.526    11.115    11.173    11.141      FAIL      FAIL      FAIL
+       128    85.023    11.124    11.076    11.140      FAIL      FAIL      FAIL
+       256    85.008    11.258    11.133    11.101      FAIL      FAIL      FAIL
+       512    85.657    11.158    10.835    10.972      FAIL      FAIL      FAIL
+
+allocation. iterations: 16777216
+         N         T         P
+         1    66.418    63.338
+         2    32.787    29.868
+         4    21.094    15.564
+         8    25.535    11.387
+        16    40.031     9.777
+        32    39.019     8.124
+        64    36.249     5.248
+       128    30.998     2.665
+       256    30.863     1.666
+       512    32.485     1.442
+
+exchanges. iterations: 131072
+         N         T         P
+         1    49.240    52.920
+         2    64.188    65.116
+         4    40.815    41.377
+         8    20.900    21.898
+        16    14.283    15.682
+        32     9.250    10.501
+        64     7.467     7.513
+       128     6.853     6.439
+       256     7.983     5.720
+       512      FAIL     5.178

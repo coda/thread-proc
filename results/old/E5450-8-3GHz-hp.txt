@@ -1,0 +1,63 @@
+call_batch: calling batch
+testing with:
+ 	up to: 512 jobs
+ 	matrix size: 4 * 512
+ 	alloc iterations: 8 * 1024 * 1024
+ 	exchange iterations: 128 * 1024
+ 	affinity: pid 11953's current affinity list: 0-7
+ 	cores: 8 on Intel(R) Xeon(R) CPU           E5450  @ 3.00GHz
+ 	system: 2.6.32-220.el6.x86_64 GNU/Linux
+ 	huge pages: hugepages-2048kB [always] never
+ 	libc: GNU C Library stable release version 2.12, by Roland McGrath et al.
+
+row-stored matrix multiplication. size: 2048
+           N           T           P        P-FS        HP.P     HP.P-FS
+           1   8m57.917s   9m15.812s   9m16.644s        FAIL        FAIL
+           2    6m2.433s   4m36.547s   4m42.081s        FAIL        FAIL
+           4   2m18.291s    3m2.400s   2m59.561s        FAIL        FAIL
+           8   1m38.195s   1m11.730s   1m12.859s        FAIL        FAIL
+          16   1m37.892s   1m29.048s   1m31.944s        FAIL        FAIL
+          32   1m37.244s   1m29.696s   1m29.385s        FAIL        FAIL
+          64   1m35.508s   1m30.486s   1m28.173s        FAIL        FAIL
+         128   1m35.999s   1m28.465s   1m29.902s        FAIL        FAIL
+         256   1m38.015s   1m28.291s   1m27.958s        FAIL        FAIL
+         512   1m37.289s   1m29.778s   1m29.189s        FAIL        FAIL
+
+tile-stored matrix multiplication. size: 2048
+           N           T           P        P-FS        HP.P     HP.P-FS
+           1   3m42.683s   0m51.881s   0m51.811s        FAIL        FAIL
+           2   2m13.074s   0m26.475s   0m26.271s        FAIL        FAIL
+           4   1m52.233s   0m15.668s   0m15.523s        FAIL        FAIL
+           8   0m59.733s    0m8.061s    0m8.088s        FAIL        FAIL
+          16   1m17.978s    0m9.959s    0m9.776s        FAIL        FAIL
+          32   1m19.006s   0m10.769s   0m10.667s        FAIL        FAIL
+          64   1m19.887s   0m10.581s   0m10.562s        FAIL        FAIL
+         128   1m19.830s   0m10.647s   0m10.452s        FAIL        FAIL
+         256   1m20.118s   0m10.757s   0m10.790s        FAIL        FAIL
+         512   1m20.719s   0m10.472s   0m10.545s        FAIL        FAIL
+
+allocation. iterations: 8388608
+           N           T           P
+           1   0m31.813s   0m30.181s
+           2   0m15.615s   0m13.978s
+           4    0m9.745s    0m6.916s
+           8    0m8.463s    0m4.474s
+          16   0m14.672s    0m3.330s
+          32   0m13.794s    0m2.321s
+          64   0m12.154s    0m1.270s
+         128   0m10.476s    0m0.821s
+         256   0m11.533s    0m0.700s
+         512   0m13.041s    0m0.698s
+
+exchanges. iterations: 131072
+           N           T           P
+           1   0m48.878s   0m52.812s
+           2    1m3.519s    1m5.390s
+           4   0m40.602s   0m41.126s
+           8   0m20.807s   0m21.803s
+          16   0m14.239s   0m15.779s
+          32    0m9.225s   0m10.393s
+          64    0m7.177s    0m7.606s
+         128    0m6.527s    0m6.347s
+         256    0m8.032s    0m5.774s
+         512        FAIL    0m5.122s

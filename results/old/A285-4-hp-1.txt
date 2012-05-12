@@ -1,0 +1,49 @@
+call_batch: calling batch
+/tmp/proclist.LYRkkM:
+umu5 0 /home/u1315/thread-proc/bld/bin/./runall
+====
+testing with:
+ 	up to: 512 jobs
+ 	matrix size: 4 * 512
+ 	alloc iterations: 8 * 1024 * 1024
+ 	exchange iterations: 128 * 1024
+ 	assumed huge page length: 2048 * 1024
+ 	affinity: pid 22152's current affinity list: 0-3
+ 	cores: 4 on Dual Core AMD Opteron(tm) Processor 285
+ 	system: 2.6.32-71.el6.x86_64 GNU/Linux
+ 	huge pages: hugepages-2048kB [always] madvise never
+ 	libc: GNU C Library stable release version 2.12, by Roland McGrath et al.
+
+row-stored matrix multiplication. size: 2048
+       N |       T |     T-M |       P |    P-FS |  HP.T-M |    HP.P | HP.P-FS |
+       1 | 342.077 | 338.948 | 338.976 | 338.825 |    FAIL |    FAIL |    FAIL |
+       2 | 211.530 | 213.455 | 213.381 | 215.266 |    FAIL |    FAIL |    FAIL |
+       4 | 137.392 | 151.993 | 151.806 | 152.316 |    FAIL |    FAIL |    FAIL |
+       8 | 136.832 | 156.858 | 159.085 | 159.704 |    FAIL |    FAIL |    FAIL |
+      16 | 144.282 | 164.362 | 167.399 | 164.269 |    FAIL |    FAIL |    FAIL |
+      32 | 157.125 | 166.413 | 166.942 | 167.351 |    FAIL |    FAIL |    FAIL |
+      64 | 176.624 | 164.283 | 167.772 | 167.357 |    FAIL |    FAIL |    FAIL |
+     128 | 158.544 | 161.338 | 164.884 | 165.284 |    FAIL |    FAIL |    FAIL |
+     256 | 195.721 | 161.321 | 164.943 | 163.812 |    FAIL |    FAIL |    FAIL |
+     512 | 196.506 | 161.296 | 163.603 | 163.867 |    FAIL |    FAIL |    FAIL |
+
+tile-stored matrix multiplication. size: 2048
+       N |       T |     T-M |       P |    P-FS |  HP.T-M |    HP.P | HP.P-FS |
+       1 | 308.682 | 217.495 | 220.428 | 220.964 |    FAIL |    FAIL |    FAIL |
+       2 | 187.672 |  47.514 |  47.342 |  47.096 |    FAIL |    FAIL |    FAIL |
+       4 |  95.918 |  30.198 |  28.844 |  29.260 |    FAIL |    FAIL |    FAIL |
+       8 | 101.401 |  28.884 |  29.721 |  29.589 |    FAIL |    FAIL |    FAIL |
+      16 | 112.642 |  29.524 |  29.802 |  29.559 |    FAIL |    FAIL |    FAIL |
+      32 | 114.648 |  30.793 |  30.056 |  29.889 |    FAIL |    FAIL |    FAIL |
+      64 | 123.622 |  30.241 |  29.721 |  29.916 |    FAIL |    FAIL |    FAIL |
+     128 | 141.106 |  31.388 |  32.031 |  30.845 |    FAIL |    FAIL |    FAIL |
+     256 | 142.060 |  33.313 |  31.572 |  31.579 |    FAIL |    FAIL |    FAIL |
+     512 | 135.428 |  31.896 |  32.673 |  33.029 |    FAIL |    FAIL |    FAIL |
+
+allocation. iterations: 8388608
+       N |       T |       P |
+       1 |  46.560 |  43.938 |
+       2 |  23.091 |  21.503 |
+       4 |  12.394 |  10.216 |
+       8 |  22.458 |   9.030 |
+      16 |  22.186 |   7.808 |

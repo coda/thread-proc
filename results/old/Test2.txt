@@ -1,0 +1,62 @@
+testing with:
+        up to: 512 jobs
+        matrix size: 4 * 512
+        alloc iterations: 8 * 1024 * 1024
+        exchange iterations: 128 * 1024
+        affinity: pid 22870's current affinity list: 0-7
+        cores: 8 on AMD FX(tm)-8120 Eight-Core Processor
+        system: 3.2.5-1-ARCH GNU/Linux
+        huge pages: hugepages-2048kB [always] madvise never
+        libc: GNU C Library stable release version 2.15, by Roland McGrath et al.
+
+row-stored matrix multiplication. size: 2048
+           N           T           P        P-FS        HP.P     HP.P-FS
+           1   4m32.561s   4m41.221s   4m37.278s   4m32.859s   4m32.826s
+           2    2m9.553s    1m9.894s    1m9.426s   2m14.826s   2m15.685s
+           4   1m11.854s   0m43.890s   0m41.993s   1m17.138s   1m20.219s
+           8   0m50.376s   0m26.638s   0m27.835s   0m49.790s   0m50.014s
+          16   0m45.224s   0m25.861s   0m24.539s   0m46.828s   0m47.162s
+          32   0m45.792s   0m27.726s   0m26.032s   0m47.015s   0m46.953s
+          64   0m45.385s   0m27.122s   0m25.991s   0m47.277s   0m47.309s
+         128   0m45.978s   0m25.300s   0m24.463s   0m47.672s   0m47.654s
+         256   0m45.608s   0m24.488s   0m23.630s   0m47.845s   0m47.898s
+         512   0m46.652s   0m23.652s   0m23.100s   0m48.598s   0m48.678s
+
+tile-stored matrix multiplication. size: 2048
+           N           T           P        P-FS        HP.P     HP.P-FS
+           1   1m28.030s    1m4.321s    1m4.625s   1m30.339s   1m30.321s
+           2   0m54.283s   0m24.345s   0m24.332s   0m56.847s   0m56.625s
+           4   0m37.509s   0m13.270s   0m13.450s   0m42.528s   0m43.679s
+           8   0m34.778s    0m8.501s    0m8.499s   0m39.170s   0m34.958s
+          16   0m30.259s    0m8.087s    0m7.980s   0m31.046s   0m31.444s
+          32   0m29.870s    0m8.154s    0m8.122s   0m31.135s   0m31.784s
+          64   0m30.429s    0m8.283s    0m8.199s   0m31.724s   0m31.716s
+         128   0m29.963s    0m7.926s    0m8.116s   0m31.238s   0m31.601s
+         256   0m30.080s    0m8.183s    0m8.237s   0m31.375s   0m31.463s
+         512   0m30.022s    0m8.416s    0m8.267s   0m31.703s   0m31.868s
+
+allocation. iterations: 8388608
+           N           T           P
+           1   0m21.632s   0m20.243s
+           2   0m12.060s   0m10.693s
+           4    0m7.115s    0m5.392s
+           8    0m6.391s    0m2.869s
+          16   0m12.139s    0m2.228s
+          32   0m11.491s    0m1.503s
+          64   0m10.206s    0m1.027s
+         128    0m8.374s    0m0.749s
+         256    0m8.909s    0m0.626s
+         512    0m8.828s    0m0.586s
+
+exchanges. iterations: 131072
+           N           T           P
+           1    1m1.104s    1m5.723s
+           2   0m51.787s   0m54.335s
+           4   0m33.352s   0m34.718s
+           8   0m20.050s   0m21.221s
+          16   0m15.122s   0m16.474s
+          32   0m12.511s   0m13.390s
+          64   0m11.304s   0m11.485s
+         128   0m10.178s   0m10.085s
+         256   0m10.599s    0m9.482s
+         512        FAIL    0m8.474s

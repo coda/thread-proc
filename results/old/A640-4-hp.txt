@@ -1,0 +1,14 @@
+testing with:
+ 	up to: 512 jobs
+ 	matrix size: 4 * 512
+ 	alloc iterations: 8 * 1024 * 1024
+ 	exchange iterations: 128 * 1024
+ 	affinity: pid 2873's current affinity list: 0-3
+ 	cores: 4 on AMD Athlon(tm) II X4 640 Processor
+ 	system: 3.2.5-1-ARCH GNU/Linux
+ 	huge pages: hugepages-2048kB [always] madvise never
+ 	libc: GNU C Library stable release version 2.15, by Roland McGrath et al.
+
+row-stored matrix multiplication. size: 2048
+           N           T           P        P-FS        HP.P     HP.P-FS
+           1   7m15.733s   7m47.720s   7m50.029s   7m14.215s   7m14.227s
