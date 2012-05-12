@@ -1,0 +1,78 @@
+checking tools: OK
+testing with:
+ 	up to: 512 jobs
+ 	matrix size: 4 * 512
+ 	alloc iterations: 0 * 1024 * 1024
+ 	exchange iterations: 0 * 1024
+ 	assumed huge page length: 2048KiB
+ 	affinity: pid 1121's current affinity list: 0-7
+ 	cores: 8 on Intel(R) Core(TM) i7-2600K CPU @ 3.40GHz
+ 	system: 3.3.5-1-ARCH GNU/Linux
+ 	huge pages: hugepages-2048kB [always] madvise never
+ 	libc: GNU C Library stable release version 2.15, by Roland McGrath et al.
+
+test round with affinity: Interleave
+
+row-stored matrix multiplication. size: 2048
+         N         T         P       T-M      HP.P    HP.T-M
+         1    78.881    83.658    83.796    80.489    80.487
+         2    52.314    34.412    34.108    72.457    74.300
+         4    56.022    17.855    17.924    47.016    49.779
+         8    34.275    23.742    17.879    49.860    41.059
+checking tools: OK
+testing with:
+ 	up to: 512 jobs
+ 	matrix size: 4 * 512
+ 	alloc iterations: 0 * 1024 * 1024
+ 	exchange iterations: 0 * 1024
+ 	assumed huge page length: 2048KiB
+ 	affinity: pid 942's current affinity list: 0-7
+ 	cores: 8 on Intel(R) Core(TM) i7-2600K CPU @ 3.40GHz
+ 	system: 3.3.5-1-ARCH GNU/Linux
+ 	huge pages: hugepages-2048kB [always] madvise never
+ 	libc: GNU C Library stable release version 2.15, by Roland McGrath et al.
+
+test round with affinity: Interleave
+
+row-stored matrix multiplication. size: 2048
+         N         T         P       T-M      HP.P    HP.T-M
+checking tools: OK
+testing with:
+ 	up to: 512 jobs
+ 	matrix size: 4 * 512
+ 	alloc iterations: 0 * 1024 * 1024
+ 	exchange iterations: 0 * 1024
+ 	assumed huge page length: 2048KiB
+ 	affinity: pid 1020's current affinity list: 0-7
+ 	cores: 8 on Intel(R) Core(TM) i7-2600K CPU @ 3.40GHz
+ 	system: 3.3.5-1-ARCH GNU/Linux
+ 	huge pages: hugepages-2048kB [always] madvise never
+ 	libc: GNU C Library stable release version 2.15, by Roland McGrath et al.
+
+test round with affinity: Interleave
+
+row-stored matrix multiplication. size: 2048
+         N         T         P       T-M      HP.P    HP.T-M
+         1    78.155    83.144    83.155    81.336    81.321
+         2    57.541    36.414    36.494    57.728    57.630
+         4    46.084    18.321    18.266    44.532    43.829
+         8    38.952    26.447    19.613    22.737    22.926
+        16    69.976    32.891    27.531    44.757    45.270
+        32    69.216    32.817    25.885    44.436    43.983
+        64    65.063    32.710    25.793    39.475    39.349
+       128    70.211    34.065    32.698    40.880    41.594
+       256    69.196    32.168    38.980    43.288    44.474
+       512    68.534    31.457    39.379    43.011    44.548
+
+tile-stored matrix multiplication. size: 2048;
+         N         T         P       T-M      HP.P    HP.T-M
+         1    93.052    78.484    79.202    80.495    80.501
+         2    52.295    17.681    17.677    62.702    62.819
+         4    56.564     8.937     8.970    55.731    57.839
+         8    49.459     7.378     7.278    41.889    42.474
+        16    94.641     7.672     7.516    59.491    59.293
+        32   101.439     8.062     7.845    59.365    59.189
+        64    97.478     8.184     8.045    58.886    58.543
+       128    93.767     8.066     8.266    57.834    58.262
+       256    93.318     8.176     8.340    56.576    57.413
+       512    91.137     8.080     8.382    54.381    56.420

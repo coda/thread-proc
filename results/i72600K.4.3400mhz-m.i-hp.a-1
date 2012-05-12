@@ -1,0 +1,40 @@
+checking tools: OK
+testing with:
+ 	up to: 512 jobs
+ 	matrix size: 4 * 512
+ 	alloc iterations: 0 * 1024 * 1024
+ 	exchange iterations: 0 * 1024
+ 	assumed huge page length: 2048KiB
+ 	affinity: pid 901's current affinity list: 0-3
+ 	cores: 4 on Intel(R) Core(TM) i7-2600K CPU @ 3.40GHz
+ 	system: 3.3.5-1-ARCH GNU/Linux
+ 	huge pages: hugepages-2048kB [always] madvise never
+ 	libc: GNU C Library stable release version 2.15, by Roland McGrath et al.
+
+test round with affinity: Interleave
+
+row-stored matrix multiplication. size: 2048
+         N         T         P       T-M      HP.P    HP.T-M
+         1    77.442    82.645    82.530    81.314    81.324
+         2    70.561    36.473    36.273    57.494    57.240
+         4    49.927    18.412    18.182    42.036    42.755
+         8    66.800    24.391    22.061    47.001    47.921
+        16    63.975    27.316    24.359    48.555    48.507
+        32    66.004    26.325    23.658    47.995    48.234
+        64    63.949    28.281    28.367    48.080    48.393
+       128    68.829    27.996    34.628    47.945    48.370
+       256    66.344    28.432    36.705    48.214    48.447
+       512    68.213    27.656    40.665    47.673    48.462
+
+tile-stored matrix multiplication. size: 2048;
+         N         T         P       T-M      HP.P    HP.T-M
+         1    98.246    88.129    87.770    80.502    80.510
+         2    52.992    17.636    17.638    62.358    63.525
+         4    55.307     8.930     8.931    53.411    58.200
+         8    99.366     9.025     9.100    60.839    61.928
+        16    93.864     9.181     9.138    61.917    61.875
+        32    92.852     9.289     9.227    61.567    61.488
+        64    93.817     9.455     9.374    61.278    61.346
+       128    93.634     9.343     9.535    60.676    61.100
+       256    93.108     9.358     9.500    59.840    60.721
+       512    94.258     9.445    10.481    58.728    60.315
