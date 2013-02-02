@@ -13,9 +13,10 @@ test -d foreign || mkdir foreign
 
 cd foreign
 
-function update() {
+function update() \
+{
 	{ test -d "$1" && ( cd "$1"; git pull ); } || git clone "$prefix/$1"
 }
 
-update mkenv
-update echo-2
+update mkenv && cd mkenv && git checkout env-1
+update echo-2 

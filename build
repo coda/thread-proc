@@ -27,9 +27,7 @@ done
 test -d "$bld" || { echo "no build directory: $bld"; false; }
 
 case "$toolchain" in
-gcc);;
-gcc-nolto);;
-clang);;
+gcc | gcc-nolto | clang);;
 *) echo "toolchain should be one of: gcc gcc-nolto clang"; false
 esac
 
@@ -38,7 +36,8 @@ fgn="$(cd "$foreign" && pwd)"
 tcn="$toolchain"
 dbg="$debug"
 
-foreignmake () {
+foreignmake () \
+{
 	echo building "$@"
 	froot="$fgn/$1"
 	fbld="$(dirname "$bld/F/$2")"
@@ -56,4 +55,4 @@ then
 fi
 
 ( cd "$base/src" && make -j $makejobs -f gnu.mk \
-	bld="$bld" foreign="$fgn" toolchain="$tcn" debug="$dbg" e2="$bld/F")
+	bld="$bld" foreign="$fgn" toolchain="$tcn" debug="$dbg" e2="$bld/F" )
